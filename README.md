@@ -28,7 +28,7 @@ tal como ele os produz - normalmente em dois formatos, lado a lado:
 
 Dados de mercado (preco, retornos, volatilidade, Sharpe ratio, drawdown,
 distancia ao ATH) para uma carteira de 11 ETFs/ETPs UCITS europeus,
-actualizados semanalmente. Codigo fonte num repositorio privado separado.
+actualizados nos dias uteis. Codigo fonte num repositorio privado separado.
 
 - `routine-data-etf/latest.json` - snapshot mais recente
 - `routine-data-etf/history.jsonl` - uma linha JSON por execucao
