@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-29T00:13:47.445409+00:00",
+  "generated_at": "2026-08-29T00:25:13.677895+00:00",
   "source_notes": "Sem fallbacks/proxies aplicados nesta execucao.",
   "assets": {
     "XEON": {
@@ -114,19 +114,19 @@
       "pct_below_ath": -1.8507232783757543,
       "notes": ""
     },
-    "IJPA": {
+    "EUNN": {
       "isin": "IE00B4L5YX21",
-      "ticker_used": "IJPA.SA",
-      "source": "none",
-      "price": null,
-      "return_ytd_pct": null,
-      "return_1y_pct": null,
-      "volatility_1y_pct": null,
-      "sharpe_1y": null,
-      "max_drawdown_pct": null,
-      "ath_52w": null,
-      "pct_below_ath": null,
-      "notes": "Se IJPA.SA (B3) falhar, EUNN.DE (Xetra) e um ticker alternativo confirmado para o mesmo ISIN.; yfinance falhou para 'IJPA.SA': yfinance devolveu historico vazio para 'IJPA.SA'; Fallback Twelve Data tambem falhou: 404 Client Error: Not Found for url: https://api.twelvedata.com/time_series?symbol=IJPA&interval=1day&outputsize=5000&apikey=0fc8428e960648dc8e86151c8352311d&exchange=BVMF; sem dados disponiveis"
+      "ticker_used": "EUNN.DE",
+      "source": "yfinance",
+      "price": 70.6500015258789,
+      "return_ytd_pct": 19.54315287641737,
+      "return_1y_pct": 27.47185659315128,
+      "volatility_1y_pct": 19.178494492072506,
+      "sharpe_1y": 1.3295215501503261,
+      "max_drawdown_pct": -19.406088881082482,
+      "ath_52w": 73.5,
+      "pct_below_ath": -3.8775489443824362,
+      "notes": "max_drawdown_pct calculado sobre os ultimos 5 anos (historico mais longo disponivel)"
     },
     "SP2Q": {
       "isin": "IE00BNGJJT35",
