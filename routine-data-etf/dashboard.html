@@ -1,0 +1,710 @@
+<title>Painel ETFs</title>
+<meta charset="utf-8">
+<style>
+  .viz-root {
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page:           #f9f9f7;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --grid:           #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --pos:            #2a78d6;
+    --neg:            #e34948;
+    --neutral-mid:    #f0efec;
+    --scatter-dot:    #2a78d6;
+    --good-text:      #006300;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --surface-1:      #1a1a19;
+      --page:           #0d0d0d;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --grid:           #2c2c2a;
+      --baseline:       #383835;
+      --border:         rgba(255,255,255,0.10);
+      --pos:            #3987e5;
+      --neg:            #e66767;
+      --neutral-mid:    #383835;
+      --scatter-dot:    #3987e5;
+      --good-text:      #0ca30c;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page:           #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --grid:           #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+    --pos:            #3987e5;
+    --neg:            #e66767;
+    --neutral-mid:    #383835;
+    --scatter-dot:    #3987e5;
+    --good-text:      #0ca30c;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--page); }
+  .viz-root {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page);
+    color: var(--text-primary);
+    padding: 28px 20px 60px;
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+  header.page-head { margin-bottom: 20px; }
+  header.page-head h1 { font-size: 20px; font-weight: 650; margin: 0 0 4px; }
+  header.page-head p { font-size: 13px; color: var(--text-secondary); margin: 0; }
+  header.page-head .note {
+    font-size: 12px; color: var(--text-muted); margin-top: 6px;
+  }
+
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px 14px;
+    margin-bottom: 18px;
+    overflow-x: auto;
+  }
+  .card h2 { font-size: 14px; font-weight: 650; margin: 0 0 2px; }
+  .card .sub { font-size: 12px; color: var(--text-secondary); margin: 0 0 14px; }
+
+  .legend { display: flex; gap: 16px; font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; }
+  .legend .key { display: inline-flex; align-items: center; gap: 6px; }
+  .legend .swatch { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+
+  svg { display: block; overflow: visible; font-family: inherit; }
+  .bar-label { font-size: 12px; fill: var(--text-primary); }
+  .value-label { font-size: 11.5px; fill: var(--text-secondary); font-variant-numeric: tabular-nums; }
+  .axis-tick { font-size: 10.5px; fill: var(--text-muted); }
+  .grid-line { stroke: var(--grid); stroke-width: 1; }
+  .baseline-line { stroke: var(--baseline); stroke-width: 1; }
+
+  .bar-hit { fill: transparent; cursor: pointer; }
+  .bar-rect { transition: opacity .1s; }
+  .bar-rect.dim { opacity: .55; }
+
+  .dot { fill: var(--scatter-dot); stroke: var(--surface-1); stroke-width: 2; }
+  .dot-hit { fill: transparent; cursor: pointer; }
+  .dot-label { font-size: 10.5px; fill: var(--text-secondary); pointer-events: none; }
+
+  .tooltip {
+    position: fixed;
+    pointer-events: none;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    z-index: 50;
+    opacity: 0;
+    transition: opacity .08s;
+    max-width: 230px;
+  }
+  .tooltip.show { opacity: 1; }
+  .tooltip .t-title { font-weight: 650; color: var(--text-primary); margin-bottom: 4px; }
+  .tooltip .t-row { display: flex; justify-content: space-between; gap: 14px; color: var(--text-secondary); }
+  .tooltip .t-row + .t-row { margin-top: 2px; }
+  .tooltip .t-row b { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+
+  .toolbar { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 12px; }
+  .toggle-btn {
+    font: inherit; font-size: 12px; color: var(--text-secondary);
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 12px; cursor: pointer;
+  }
+  .toggle-btn:hover { color: var(--text-primary); }
+
+  table.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  table.data-table th, table.data-table td {
+    text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--grid);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  table.data-table th:first-child, table.data-table td:first-child { text-align: left; font-variant-numeric: normal; }
+  table.data-table th { color: var(--text-muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .02em; }
+  table.data-table td { color: var(--text-secondary); }
+  table.data-table td.name { color: var(--text-primary); font-weight: 600; }
+  table.data-table td.pos { color: var(--good-text); }
+  table.data-table td.neg { color: var(--neg); }
+  #tableWrap { display: none; overflow-x: auto; }
+  #tableWrap.show { display: block; }
+
+  .tile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+  .tile {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    cursor: default;
+  }
+  .tile .t-ticker { font-size: 12px; font-weight: 650; color: var(--text-primary); }
+  .tile .t-price { font-size: 17px; font-weight: 650; margin-top: 2px; }
+  .tile .t-delta { font-size: 11.5px; margin-top: 1px; font-variant-numeric: tabular-nums; }
+  .tile .t-delta.pos { color: var(--good-text); }
+  .tile .t-delta.neg { color: var(--neg); }
+  .tile svg { margin-top: 6px; }
+</style>
+
+<div class="viz-root">
+  <header class="page-head">
+    <h1>ETFs monitorados &mdash; retorno e risco</h1>
+    <p id="statusLine">Buscando dados mais recentes no GitHub&hellip;</p>
+    <p class="note" id="metaLine" hidden>Último snapshot em <span id="genDate"></span> &middot; <span id="snapCount"></span> &middot; fonte: yfinance (routine-data-etf/history.jsonl)</p>
+  </header>
+
+  <div id="errorBox" class="card" hidden style="border-color:var(--neg)">
+    <h2 style="color:var(--neg)">Não foi possível carregar os dados</h2>
+    <p class="sub" id="errorDetail"></p>
+    <button class="toggle-btn" id="retryBtn" type="button">Tentar novamente</button>
+  </div>
+
+  <div class="toolbar">
+    <button class="toggle-btn" id="refreshBtn" type="button">Recarregar dados</button>
+    <button class="toggle-btn" id="tableToggle" type="button">Ver tabela de dados</button>
+  </div>
+
+  <div id="tableWrap" class="card">
+    <h2>Dados brutos</h2>
+    <p class="sub">Todos os campos do snapshot mais recente, por ETF.</p>
+    <div style="overflow-x:auto">
+      <table class="data-table" id="dataTable"></table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Evolução de preço</h2>
+    <p class="sub">Preço em cada snapshot coletado, por ETF, com variação desde o primeiro registro.</p>
+    <div class="tile-grid" id="priceTiles"></div>
+  </div>
+
+  <div class="card">
+    <h2>Retorno no ano (YTD)</h2>
+    <p class="sub">Variação percentual acumulada em 2026, por ETF.</p>
+    <div class="legend">
+      <span class="key"><span class="swatch" style="background:var(--pos)"></span>positivo</span>
+      <span class="key"><span class="swatch" style="background:var(--neg)"></span>negativo</span>
+    </div>
+    <svg id="barYtd"></svg>
+  </div>
+
+  <div class="card">
+    <h2>Retorno em 12 meses</h2>
+    <p class="sub">Variação percentual nos últimos 12 meses, por ETF.</p>
+    <div class="legend">
+      <span class="key"><span class="swatch" style="background:var(--pos)"></span>positivo</span>
+      <span class="key"><span class="swatch" style="background:var(--neg)"></span>negativo</span>
+    </div>
+    <svg id="bar1y"></svg>
+  </div>
+
+  <div class="card">
+    <h2>Risco &times; retorno (12 meses)</h2>
+    <p class="sub">Volatilidade anualizada (eixo X) contra retorno de 12 meses (eixo Y). Ideal: acima e à esquerda.</p>
+    <svg id="scatter"></svg>
+  </div>
+
+  <div class="card">
+    <h2>Risco &times; retorno (10 anos)</h2>
+    <p class="sub">Mesmo cruzamento, mas no prazo mais longo disponível &mdash; só para os ETFs com pelo menos 10 anos de histórico (os demais não têm retorno de 10 anos calculável).</p>
+    <svg id="scatter10y"></svg>
+  </div>
+
+  <div class="card">
+    <h2>Sharpe (12 meses)</h2>
+    <p class="sub">Retorno ajustado ao risco. XEON fica de fora (usado como referência de taxa livre de risco, sem Sharpe aplicável).</p>
+    <div class="legend">
+      <span class="key"><span class="swatch" style="background:var(--pos)"></span>positivo</span>
+      <span class="key"><span class="swatch" style="background:var(--neg)"></span>negativo</span>
+    </div>
+    <svg id="barSharpe"></svg>
+  </div>
+
+  <div class="card">
+    <h2>Distância do topo de 52 semanas</h2>
+    <p class="sub">Quanto o preço atual está abaixo da máxima dos últimos 52 semanas, por ETF.</p>
+    <svg id="barAth"></svg>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+(function () {
+  var DATA_URL = 'https://raw.githubusercontent.com/dblxpt/data-published/main/routine-data-etf/history.jsonl';
+  var FIELDS = ['isin', 'ticker_used', 'price', 'return_ytd_pct', 'return_1y_pct', 'volatility_1y_pct',
+    'return_10y_pct', 'volatility_10y_pct', 'sharpe_1y', 'max_drawdown_pct', 'pct_below_ath'];
+
+  var data = {};
+  var snapshots = [];
+  var generatedAt = null;
+
+  var tooltip = document.getElementById('tooltip');
+  function showTip(html, x, y) {
+    tooltip.innerHTML = '';
+    tooltip.appendChild(html);
+    tooltip.classList.add('show');
+    var pad = 14;
+    var tw = tooltip.offsetWidth, th = tooltip.offsetHeight;
+    var left = x + pad, top = y - th / 2;
+    if (left + tw > window.innerWidth - 8) left = x - tw - pad;
+    if (top < 8) top = 8;
+    if (top + th > window.innerHeight - 8) top = window.innerHeight - th - 8;
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+  }
+  function hideTip() { tooltip.classList.remove('show'); }
+
+  function fmtPct(v, digits) {
+    if (v === null || v === undefined) return '—';
+    digits = digits === undefined ? 1 : digits;
+    var s = (v > 0 ? '+' : '') + v.toFixed(digits) + '%';
+    return s;
+  }
+  function fmtNum(v, digits) {
+    if (v === null || v === undefined) return '—';
+    return v.toFixed(digits === undefined ? 2 : digits);
+  }
+
+  var NS = 'http://www.w3.org/2000/svg';
+  function el(tag, attrs) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function text(str, attrs, cls) {
+    var t = el('text', attrs);
+    if (cls) t.setAttribute('class', cls);
+    t.textContent = str;
+    return t;
+  }
+
+  function tipRow(label, value, cls) {
+    var row = document.createElement('div');
+    row.className = 't-row';
+    var l = document.createElement('span');
+    l.textContent = label;
+    var v = document.createElement('b');
+    if (cls) v.className = cls;
+    v.textContent = value;
+    row.appendChild(l);
+    row.appendChild(v);
+    return row;
+  }
+  function tipBlock(title, rows) {
+    var wrap = document.createElement('div');
+    var h = document.createElement('div');
+    h.className = 't-title';
+    h.textContent = title;
+    wrap.appendChild(h);
+    rows.forEach(function (r) { wrap.appendChild(r); });
+    return wrap;
+  }
+
+  // ---------- Diverging bar chart ----------
+  function renderDivergingBar(svgId, metricKey, metricLabel, unit) {
+    var svg = document.getElementById(svgId);
+    unit = unit || 'pct';
+    var fmtVal = unit === 'pct' ? fmtPct : function (v) { return (v >= 0 ? '+' : '') + v.toFixed(2); };
+    var fmtTick = unit === 'pct' ? function (v) { return v.toFixed(0) + '%'; } : function (v) { return v.toFixed(1); };
+    var items = Object.keys(data).filter(function (k) {
+      return typeof data[k][metricKey] === 'number';
+    }).map(function (k) {
+      return { name: k, value: data[k][metricKey], raw: data[k] };
+    }).sort(function (a, b) { return b.value - a.value; });
+
+    var width = 700, leftLabelW = 60, rightPad = 60;
+    var rowH = 28, barH = 18;
+    var plotW = width - leftLabelW - rightPad;
+    var height = items.length * rowH + 10;
+    var maxAbs = Math.max.apply(null, items.map(function (d) { return Math.abs(d.value); }));
+    maxAbs = maxAbs <= 5 ? Math.ceil(maxAbs * 10) / 10 : Math.ceil(maxAbs / 5) * 5;
+    var midX = leftLabelW + plotW / 2;
+    var scale = (plotW / 2) / maxAbs;
+
+    svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', height);
+    svg.innerHTML = '';
+
+    // gridlines at -maxAbs, -maxAbs/2, 0, maxAbs/2, maxAbs
+    [-maxAbs, -maxAbs/2, 0, maxAbs/2, maxAbs].forEach(function (v) {
+      var x = midX + v * scale;
+      svg.appendChild(el('line', { x1: x, x2: x, y1: 0, y2: height - 14, class: v === 0 ? 'baseline-line' : 'grid-line' }));
+      svg.appendChild(text(fmtTick(v), { x: x, y: height - 2, 'text-anchor': 'middle' }, 'axis-tick'));
+    });
+
+    items.forEach(function (d, i) {
+      var y = i * rowH + (rowH - barH) / 2;
+      var x0 = midX + Math.min(0, d.value) * scale;
+      var x1 = midX + Math.max(0, d.value) * scale;
+      var w = Math.max(1, x1 - x0);
+      var isPos = d.value >= 0;
+
+      svg.appendChild(text(d.name, { x: leftLabelW - 10, y: y + barH / 2 + 4, 'text-anchor': 'end' }, 'bar-label'));
+
+      var rect = el('rect', {
+        x: x0, y: y, width: w, height: barH, rx: 4,
+        fill: isPos ? 'var(--pos)' : 'var(--neg)', class: 'bar-rect'
+      });
+      svg.appendChild(rect);
+
+      var labelX = isPos ? x1 + 6 : x0 - 6;
+      svg.appendChild(text(fmtVal(d.value), { x: labelX, y: y + barH / 2 + 4, 'text-anchor': isPos ? 'start' : 'end' }, 'value-label'));
+
+      var hit = el('rect', { x: leftLabelW, y: i * rowH, width: plotW, height: rowH, class: 'bar-hit' });
+      hit.addEventListener('pointerenter', function (ev) { onHover(ev); });
+      hit.addEventListener('pointermove', function (ev) { onHover(ev); });
+      hit.addEventListener('pointerleave', function () { rect.classList.remove('dim'); hideTip(); });
+      function onHover(ev) {
+        var block = tipBlock(d.raw.ticker_used + ' (' + d.name + ')', [
+          tipRow(metricLabel, fmtVal(d.value), isPos ? 'pos' : 'neg'),
+          tipRow('Preço', d.raw.price.toFixed(2)),
+          tipRow('Retorno 1a', fmtPct(d.raw.return_1y_pct)),
+          tipRow('Volatilidade 1a', fmtPct(d.raw.volatility_1y_pct)),
+          tipRow('Drawdown máx.', fmtPct(d.raw.max_drawdown_pct))
+        ]);
+        showTip(block, ev.clientX, ev.clientY);
+      }
+      svg.appendChild(hit);
+    });
+  }
+
+  // ---------- Single-hue magnitude bar (all values same sign) ----------
+  function renderMagnitudeBar(svgId, metricKey, metricLabel) {
+    var svg = document.getElementById(svgId);
+    var items = Object.keys(data).map(function (k) {
+      return { name: k, value: data[k][metricKey], raw: data[k] };
+    }).sort(function (a, b) { return b.value - a.value; });
+
+    var width = 700, leftLabelW = 60, rightPad = 60;
+    var rowH = 28, barH = 18;
+    var plotW = width - leftLabelW - rightPad;
+    var height = items.length * rowH + 24;
+    var maxAbs = Math.ceil(Math.max.apply(null, items.map(function (d) { return Math.abs(d.value); })) / 5) * 5;
+    var scale = plotW / maxAbs;
+
+    svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', height);
+    svg.innerHTML = '';
+
+    for (var v = 0; v <= maxAbs; v += maxAbs / 4) {
+      var x = leftLabelW + plotW - v * scale;
+      svg.appendChild(el('line', { x1: x, x2: x, y1: 0, y2: height - 14, class: v === 0 ? 'baseline-line' : 'grid-line' }));
+      svg.appendChild(text((v === 0 ? '0' : '-' + v.toFixed(0)) + '%', { x: x, y: height - 2, 'text-anchor': 'middle' }, 'axis-tick'));
+    }
+
+    items.forEach(function (d, i) {
+      var y = i * rowH + (rowH - barH) / 2;
+      var xEnd = leftLabelW + plotW;
+      var xStart = xEnd - Math.abs(d.value) * scale;
+      var w = Math.max(1, xEnd - xStart);
+
+      svg.appendChild(text(d.name, { x: leftLabelW - 10, y: y + barH / 2 + 4, 'text-anchor': 'end' }, 'bar-label'));
+
+      var rect = el('rect', { x: xStart, y: y, width: w, height: barH, rx: 4, fill: 'var(--scatter-dot)', class: 'bar-rect' });
+      svg.appendChild(rect);
+
+      svg.appendChild(text(fmtPct(d.value), { x: xStart - 6, y: y + barH / 2 + 4, 'text-anchor': 'end' }, 'value-label'));
+
+      var hit = el('rect', { x: leftLabelW, y: i * rowH, width: plotW, height: rowH, class: 'bar-hit' });
+      function onHover(ev) {
+        var block = tipBlock(d.raw.ticker_used + ' (' + d.name + ')', [
+          tipRow(metricLabel, fmtPct(d.value)),
+          tipRow('Preço atual', d.raw.price.toFixed(2)),
+          tipRow('Retorno 12m', fmtPct(d.raw.return_1y_pct), d.raw.return_1y_pct >= 0 ? 'pos' : 'neg')
+        ]);
+        showTip(block, ev.clientX, ev.clientY);
+      }
+      hit.addEventListener('pointerenter', onHover);
+      hit.addEventListener('pointermove', onHover);
+      hit.addEventListener('pointerleave', hideTip);
+      svg.appendChild(hit);
+    });
+  }
+
+  // ---------- Scatter: volatility vs return (generic, any horizon) ----------
+  function renderRiskReturnScatter(svgId, xKey, yKey, xAxisLabel, periodLabel) {
+    var svg = document.getElementById(svgId);
+    var items = Object.keys(data).filter(function (k) {
+      return typeof data[k][xKey] === 'number' && typeof data[k][yKey] === 'number';
+    }).map(function (k) { return { name: k, raw: data[k] }; });
+
+    var width = 700, height = 460;
+    var padL = 50, padR = 24, padT = 16, padB = 40;
+    var plotW = width - padL - padR, plotH = height - padT - padB;
+
+    var xs = items.map(function (d) { return d.raw[xKey]; });
+    var ys = items.map(function (d) { return d.raw[yKey]; });
+    var xMax = Math.ceil(Math.max.apply(null, xs) / 5) * 5;
+    var xMin = 0;
+    var yStep = Math.max.apply(null, ys) > 150 ? 100 : 10;
+    var yMax = Math.ceil(Math.max.apply(null, ys) / yStep) * yStep;
+    var yMin = Math.floor(Math.min.apply(null, ys) / yStep) * yStep;
+
+    function xPix(v) { return padL + (v - xMin) / (xMax - xMin) * plotW; }
+    function yPix(v) { return padT + (1 - (v - yMin) / (yMax - yMin)) * plotH; }
+
+    svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', height);
+    svg.innerHTML = '';
+
+    // y gridlines
+    for (var yv = Math.ceil(yMin / yStep) * yStep; yv <= yMax; yv += yStep) {
+      var yy = yPix(yv);
+      svg.appendChild(el('line', { x1: padL, x2: width - padR, y1: yy, y2: yy, class: yv === 0 ? 'baseline-line' : 'grid-line' }));
+      svg.appendChild(text(yv + '%', { x: padL - 8, y: yy + 4, 'text-anchor': 'end' }, 'axis-tick'));
+    }
+    // x gridlines
+    var xStep = 5;
+    for (var xv = xMin; xv <= xMax; xv += xStep) {
+      var xx = xPix(xv);
+      svg.appendChild(text(xv + '%', { x: xx, y: height - padB + 16, 'text-anchor': 'middle' }, 'axis-tick'));
+    }
+    svg.appendChild(el('line', { x1: padL, x2: width - padR, y1: height - padB, y2: height - padB, class: 'grid-line' }));
+    svg.appendChild(text(xAxisLabel, { x: padL + plotW / 2, y: height - 4, 'text-anchor': 'middle' }, 'axis-tick'));
+
+    items.forEach(function (d) {
+      var cx = xPix(d.raw[xKey]);
+      var cy = yPix(d.raw[yKey]);
+      var dot = el('circle', { cx: cx, cy: cy, r: 5, class: 'dot' });
+      svg.appendChild(dot);
+      svg.appendChild(text(d.name, { x: cx + 8, y: cy - 8 }, 'dot-label'));
+
+      var hit = el('circle', { cx: cx, cy: cy, r: 14, class: 'dot-hit' });
+      function onHover(ev) {
+        var block = tipBlock(d.raw.ticker_used + ' (' + d.name + ')', [
+          tipRow('Retorno ' + periodLabel, fmtPct(d.raw[yKey]), d.raw[yKey] >= 0 ? 'pos' : 'neg'),
+          tipRow('Volatilidade ' + periodLabel, fmtPct(d.raw[xKey])),
+          tipRow('Sharpe 12m', fmtNum(d.raw.sharpe_1y)),
+          tipRow('Drawdown máx.', fmtPct(d.raw.max_drawdown_pct))
+        ]);
+        showTip(block, ev.clientX, ev.clientY);
+      }
+      hit.addEventListener('pointerenter', onHover);
+      hit.addEventListener('pointermove', onHover);
+      hit.addEventListener('pointerleave', hideTip);
+      svg.appendChild(hit);
+    });
+  }
+
+  // ---------- Price evolution tiles + sparkline ----------
+  function renderPriceTiles() {
+    var grid = document.getElementById('priceTiles');
+    grid.innerHTML = '';
+    var names = Object.keys(data).sort();
+    var tickCount = snapshots.length;
+
+    names.forEach(function (name) {
+      var series = snapshots.map(function (s) { return s.p[name]; }).filter(function (v) { return typeof v === 'number'; });
+      if (!series.length) return;
+      var first = series[0], last = series[series.length - 1];
+      var delta = first !== 0 ? ((last - first) / first) * 100 : 0;
+      var isPos = delta >= 0;
+
+      var tile = document.createElement('div');
+      tile.className = 'tile';
+
+      var ticker = document.createElement('div');
+      ticker.className = 't-ticker';
+      ticker.textContent = name;
+      tile.appendChild(ticker);
+
+      var price = document.createElement('div');
+      price.className = 't-price';
+      price.textContent = last.toFixed(2);
+      tile.appendChild(price);
+
+      var delta_el = document.createElement('div');
+      delta_el.className = 't-delta ' + (isPos ? 'pos' : 'neg');
+      delta_el.textContent = (isPos ? '+' : '') + delta.toFixed(2) + '% desde o 1º snapshot';
+      tile.appendChild(delta_el);
+
+      if (tickCount > 1) {
+        var w = 126, h = 30, pad = 4;
+        var vMin = Math.min.apply(null, series), vMax = Math.max.apply(null, series);
+        var span = vMax - vMin || 1;
+        var pts = series.map(function (v, i) {
+          var x = pad + (i / (series.length - 1)) * (w - pad * 2);
+          var y = pad + (1 - (v - vMin) / span) * (h - pad * 2);
+          return [x, y];
+        });
+        var svgEl = el('svg', { viewBox: '0 0 ' + w + ' ' + h, width: w, height: h });
+        var path = pts.map(function (p, i) { return (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' ');
+        svgEl.appendChild(el('path', { d: path, fill: 'none', stroke: 'var(--text-muted)', 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+        var lastPt = pts[pts.length - 1];
+        svgEl.appendChild(el('circle', { cx: lastPt[0], cy: lastPt[1], r: 3, fill: isPos ? 'var(--pos)' : 'var(--neg)' }));
+        tile.appendChild(svgEl);
+      }
+
+      var hoverBlock = [];
+      snapshots.forEach(function (s) {
+        var v = s.p[name];
+        if (typeof v !== 'number') return;
+        hoverBlock.push(tipRow(new Date(s.t).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }), v.toFixed(2)));
+      });
+      tile.addEventListener('pointerenter', function (ev) { showTip(tipBlock(name + ' — preço por snapshot', hoverBlock), ev.clientX, ev.clientY); });
+      tile.addEventListener('pointermove', function (ev) { showTip(tipBlock(name + ' — preço por snapshot', hoverBlock), ev.clientX, ev.clientY); });
+      tile.addEventListener('pointerleave', hideTip);
+
+      grid.appendChild(tile);
+    });
+  }
+
+  // ---------- Data table ----------
+  function renderTable() {
+    var table = document.getElementById('dataTable');
+    table.innerHTML = '';
+    var cols = [
+      ['ETF', 'name'], ['ISIN', 'isin'], ['Ticker', 'ticker_used'], ['Preço', 'price'],
+      ['YTD %', 'return_ytd_pct'], ['1a %', 'return_1y_pct'], ['10a %', 'return_10y_pct'],
+      ['Vol. 1a %', 'volatility_1y_pct'], ['Vol. 10a %', 'volatility_10y_pct'],
+      ['Sharpe 1a', 'sharpe_1y'], ['Drawdown %', 'max_drawdown_pct'], ['Abaixo ATH %', 'pct_below_ath']
+    ];
+    var thead = document.createElement('thead');
+    var htr = document.createElement('tr');
+    cols.forEach(function (c) {
+      var th = document.createElement('th');
+      th.textContent = c[0];
+      htr.appendChild(th);
+    });
+    thead.appendChild(htr);
+    table.appendChild(thead);
+
+    var tbody = document.createElement('tbody');
+    var names = Object.keys(data).sort(function (a, b) { return data[b].return_1y_pct - data[a].return_1y_pct; });
+    names.forEach(function (name) {
+      var d = data[name];
+      var tr = document.createElement('tr');
+      cols.forEach(function (c) {
+        var td = document.createElement('td');
+        var key = c[1];
+        var val;
+        if (key === 'name') { val = name; td.className = 'name'; }
+        else if (key === 'isin' || key === 'ticker_used') { val = d[key]; }
+        else if (key === 'price') { val = d[key].toFixed(2); }
+        else if (key === 'sharpe_1y') { val = fmtNum(d[key]); }
+        else {
+          val = fmtPct(d[key]);
+          if (typeof d[key] === 'number') td.className = d[key] >= 0 ? 'pos' : 'neg';
+        }
+        td.textContent = val;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+  }
+
+  var toggle = document.getElementById('tableToggle');
+  var wrap = document.getElementById('tableWrap');
+  toggle.addEventListener('click', function () {
+    var show = !wrap.classList.contains('show');
+    wrap.classList.toggle('show', show);
+    toggle.textContent = show ? 'Ocultar tabela de dados' : 'Ver tabela de dados';
+  });
+
+  // ---------- Orchestration: fetch live JSONL, always bypassing cache ----------
+  function renderAll() {
+    document.getElementById('genDate').textContent = new Date(generatedAt).toLocaleString('pt-BR', {
+      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+    document.getElementById('snapCount').textContent = snapshots.length + (snapshots.length === 1 ? ' snapshot coletado' : ' snapshots coletados');
+    document.getElementById('metaLine').hidden = false;
+
+    renderDivergingBar('barYtd', 'return_ytd_pct', 'Retorno YTD');
+    renderDivergingBar('bar1y', 'return_1y_pct', 'Retorno 12m');
+    renderDivergingBar('barSharpe', 'sharpe_1y', 'Sharpe 12m', 'ratio');
+    renderMagnitudeBar('barAth', 'pct_below_ath', 'Abaixo do topo 52s');
+    renderRiskReturnScatter('scatter', 'volatility_1y_pct', 'return_1y_pct', 'Volatilidade 12 meses (%)', '12m');
+    renderRiskReturnScatter('scatter10y', 'volatility_10y_pct', 'return_10y_pct', 'Volatilidade 10 anos (%)', '10a');
+    renderPriceTiles();
+    renderTable();
+  }
+
+  function parseJsonl(text) {
+    return text.split('\n')
+      .map(function (line) { return line.trim(); })
+      .filter(function (line) { return line.length > 0; })
+      .map(function (line) { return JSON.parse(line); });
+  }
+
+  function buildFromRecords(records) {
+    snapshots = records.map(function (rec) {
+      var prices = {};
+      Object.keys(rec.assets).forEach(function (k) { prices[k] = rec.assets[k].price; });
+      return { t: rec.generated_at, p: prices };
+    });
+
+    var latest = records[records.length - 1];
+    generatedAt = latest.generated_at;
+    data = {};
+    Object.keys(latest.assets).forEach(function (k) {
+      var src = latest.assets[k];
+      var entry = {};
+      FIELDS.forEach(function (f) { entry[f] = src[f] === undefined ? null : src[f]; });
+      data[k] = entry;
+    });
+  }
+
+  function setStatus(state, detail) {
+    var statusLine = document.getElementById('statusLine');
+    var errorBox = document.getElementById('errorBox');
+    var errorDetail = document.getElementById('errorDetail');
+    if (state === 'loading') {
+      statusLine.hidden = false;
+      statusLine.textContent = 'Buscando dados mais recentes no GitHub…';
+      errorBox.hidden = true;
+    } else if (state === 'ok') {
+      statusLine.hidden = true;
+      errorBox.hidden = true;
+    } else if (state === 'error') {
+      statusLine.hidden = true;
+      errorBox.hidden = false;
+      errorDetail.textContent = 'Falha ao buscar ' + DATA_URL + ' (' + (detail && detail.message ? detail.message : detail) + '). ' +
+        'Se este painel estiver aberto como Artifact do claude.ai, o sandbox bloqueia requisições a domínios externos — abra o arquivo fora do claude.ai (localmente ou hospedado) para carregar dados ao vivo.';
+    }
+  }
+
+  function loadData() {
+    setStatus('loading');
+    var bustedUrl = DATA_URL + '?_=' + Date.now();
+    fetch(bustedUrl, { cache: 'no-store' })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.text();
+      })
+      .then(function (text) {
+        var records = parseJsonl(text);
+        if (!records.length) throw new Error('arquivo vazio');
+        buildFromRecords(records);
+        renderAll();
+        setStatus('ok');
+      })
+      .catch(function (err) {
+        setStatus('error', err);
+      });
+  }
+
+  document.getElementById('refreshBtn').addEventListener('click', loadData);
+  document.getElementById('retryBtn').addEventListener('click', loadData);
+
+  loadData();
+})();
+</script>
