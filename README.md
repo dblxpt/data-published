@@ -9,8 +9,8 @@ fonte desses projectos.
 Uma pasta por projecto de origem, com os ficheiros de dados desse projecto
 tal como ele os produz - normalmente em dois formatos, lado a lado:
 
-- JSON (`latest.json` snapshot, `history.jsonl` historico append-only) -
-  para consumo programatico.
+- JSON (`latest.json` snapshot, `history.jsonl` historico com uma linha
+  por dia) - para consumo programatico.
 - CSV (`latest.csv` snapshot, `history.csv` historico em formato longo) -
   para ligar directamente a graficos no Excel ou Google Sheets.
 
@@ -31,10 +31,11 @@ distancia ao ATH) para uma carteira de 11 ETFs/ETPs UCITS europeus,
 actualizados nos dias uteis. Codigo fonte num repositorio privado separado.
 
 - `routine-data-etf/latest.json` - snapshot mais recente
-- `routine-data-etf/history.jsonl` - uma linha JSON por execucao
+- `routine-data-etf/history.jsonl` - uma linha JSON por dia (a execucao
+  mais recente desse dia, se tiver corrido mais do que uma vez)
 - `routine-data-etf/latest.csv` - o mesmo snapshot em CSV, uma linha por activo
 - `routine-data-etf/history.csv` - historico em CSV, formato longo (uma
-  linha por activo por execucao) - o mais indicado para graficos
+  linha por activo por dia) - o mais indicado para graficos
 
 Acesso directo (sem autenticacao, repositorio publico):
 
