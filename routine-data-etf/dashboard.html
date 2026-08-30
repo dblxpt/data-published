@@ -219,6 +219,12 @@
   </div>
 
   <div class="card">
+    <h2>Risco &times; retorno (5 anos)</h2>
+    <p class="sub">Mesmo cruzamento, no prazo de 5 anos &mdash; só para os ETFs com pelo menos 5 anos de histórico.</p>
+    <svg id="scatter5y"></svg>
+  </div>
+
+  <div class="card">
     <h2>Risco &times; retorno (10 anos)</h2>
     <p class="sub">Mesmo cruzamento, mas no prazo mais longo disponível &mdash; só para os ETFs com pelo menos 10 anos de histórico (os demais não têm retorno de 10 anos calculável).</p>
     <svg id="scatter10y"></svg>
@@ -247,7 +253,8 @@
 (function () {
   var DATA_URL = 'https://raw.githubusercontent.com/dblxpt/data-published/main/routine-data-etf/history.jsonl';
   var FIELDS = ['isin', 'ticker_used', 'price', 'return_ytd_pct', 'return_1y_pct', 'volatility_1y_pct',
-    'return_10y_pct', 'volatility_10y_pct', 'sharpe_1y', 'max_drawdown_pct', 'pct_below_ath'];
+    'return_5y_pct', 'volatility_5y_pct', 'return_10y_pct', 'volatility_10y_pct',
+    'sharpe_1y', 'max_drawdown_pct', 'pct_below_ath'];
 
   var data = {};
   var snapshots = [];
@@ -439,6 +446,14 @@
   }
 
   // ---------- Scatter: volatility vs return (generic, any horizon) ----------
+  function niceStep(rough) {
+    if (!(rough > 0)) return 1;
+    var pow10 = Math.pow(10, Math.floor(Math.log(rough) / Math.LN10));
+    var frac = rough / pow10;
+    var niceFrac = frac <= 1 ? 1 : frac <= 2 ? 2 : frac <= 5 ? 5 : 10;
+    return niceFrac * pow10;
+  }
+
   function renderRiskReturnScatter(svgId, xKey, yKey, xAxisLabel, periodLabel) {
     var svg = document.getElementById(svgId);
     var items = Object.keys(data).filter(function (k) {
@@ -446,6 +461,16 @@
     }).map(function (k) { return { name: k, raw: data[k] }; });
 
     var width = 700, height = 460;
+
+    if (!items.length) {
+      svg.setAttribute('viewBox', '0 0 ' + width + ' 80');
+      svg.setAttribute('width', '100%');
+      svg.setAttribute('height', 80);
+      svg.innerHTML = '';
+      svg.appendChild(text('Sem ETFs com histórico suficiente para este prazo.', { x: width / 2, y: 44, 'text-anchor': 'middle' }, 'axis-tick'));
+      return;
+    }
+
     var padL = 50, padR = 24, padT = 16, padB = 40;
     var plotW = width - padL - padR, plotH = height - padT - padB;
 
@@ -453,7 +478,7 @@
     var ys = items.map(function (d) { return d.raw[yKey]; });
     var xMax = Math.ceil(Math.max.apply(null, xs) / 5) * 5;
     var xMin = 0;
-    var yStep = Math.max.apply(null, ys) > 150 ? 100 : 10;
+    var yStep = niceStep((Math.max.apply(null, ys) - Math.min.apply(null, ys)) / 6);
     var yMax = Math.ceil(Math.max.apply(null, ys) / yStep) * yStep;
     var yMin = Math.floor(Math.min.apply(null, ys) / yStep) * yStep;
 
@@ -573,8 +598,8 @@
     table.innerHTML = '';
     var cols = [
       ['ETF', 'name'], ['ISIN', 'isin'], ['Ticker', 'ticker_used'], ['Preço', 'price'],
-      ['YTD %', 'return_ytd_pct'], ['1a %', 'return_1y_pct'], ['10a %', 'return_10y_pct'],
-      ['Vol. 1a %', 'volatility_1y_pct'], ['Vol. 10a %', 'volatility_10y_pct'],
+      ['YTD %', 'return_ytd_pct'], ['1a %', 'return_1y_pct'], ['5a %', 'return_5y_pct'], ['10a %', 'return_10y_pct'],
+      ['Vol. 1a %', 'volatility_1y_pct'], ['Vol. 5a %', 'volatility_5y_pct'], ['Vol. 10a %', 'volatility_10y_pct'],
       ['Sharpe 1a', 'sharpe_1y'], ['Drawdown %', 'max_drawdown_pct'], ['Abaixo ATH %', 'pct_below_ath']
     ];
     var thead = document.createElement('thead');
@@ -633,6 +658,7 @@
     renderDivergingBar('barSharpe', 'sharpe_1y', 'Sharpe 12m', 'ratio');
     renderMagnitudeBar('barAth', 'pct_below_ath', 'Abaixo do topo 52s');
     renderRiskReturnScatter('scatter', 'volatility_1y_pct', 'return_1y_pct', 'Volatilidade 12 meses (%)', '12m');
+    renderRiskReturnScatter('scatter5y', 'volatility_5y_pct', 'return_5y_pct', 'Volatilidade 5 anos (%)', '5a');
     renderRiskReturnScatter('scatter10y', 'volatility_10y_pct', 'return_10y_pct', 'Volatilidade 10 anos (%)', '10a');
     renderPriceTiles();
     renderTable();
