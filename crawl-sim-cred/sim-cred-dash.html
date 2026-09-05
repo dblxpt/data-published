@@ -373,7 +373,13 @@
     });
 
     const bancosDisponiveis = Object.keys(ctx);
-    const state = { banco: bancosDisponiveis[0], fin: ctx[bancosDisponiveis[0]].finalidades[0] };
+    // Cada banco guarda a sua propria finalidade selecionada,
+    // independente do outro - trocar de banco nao mexe na selecao do
+    // outro, para se poder comparar ex.: "Ferias e Lazer" na Cofidis
+    // com "Viagens" na Cetelem, cada um escolhido manualmente, sem
+    // nenhuma tentativa automatica de os corresponder.
+    const state = { banco: bancosDisponiveis[0], finPorBanco: {} };
+    bancosDisponiveis.forEach(id => { state.finPorBanco[id] = ctx[id].finalidades[0]; });
 
     document.getElementById('app').hidden = false;
     document.getElementById('footer').hidden = false;
@@ -489,14 +495,10 @@
         btn.setAttribute('aria-pressed', id === state.banco ? 'true' : 'false');
         btn.addEventListener('click', () => {
           if (!ctx[id]) return;
-          // mantem a MESMA POSICAO na lista de finalidades ao trocar de
-          // banco, em vez de saltar sempre para a primeira - so cai para
-          // a ultima disponivel se o banco novo tiver menos finalidades
-          // do que o indice atual.
-          const idxAtual = ctx[state.banco].finalidades.indexOf(state.fin);
+          // so troca qual banco esta ativo - a finalidade selecionada
+          // de cada banco fica guardada em state.finPorBanco e nao se
+          // mexe (ver comentario junto a essa variavel).
           state.banco = id;
-          const finsNovas = ctx[id].finalidades;
-          state.fin = finsNovas[Math.min(idxAtual, finsNovas.length - 1)];
           renderBancoButtons();
           renderFinButtons();
           renderMetaRow();
@@ -516,8 +518,12 @@
         const btn = document.createElement('button');
         btn.className = 'fin-btn';
         btn.textContent = fin;
-        btn.setAttribute('aria-pressed', fin === state.fin ? 'true' : 'false');
-        btn.addEventListener('click', () => { state.fin = fin; renderFinButtons(); renderAll(); });
+        btn.setAttribute('aria-pressed', fin === state.finPorBanco[state.banco] ? 'true' : 'false');
+        btn.addEventListener('click', () => {
+          state.finPorBanco[state.banco] = fin;
+          renderFinButtons();
+          renderAll();
+        });
         host.appendChild(btn);
       });
     }
@@ -531,7 +537,7 @@
     }
 
     function renderAll() {
-      const banco = state.banco, fin = state.fin;
+      const banco = state.banco, fin = state.finPorBanco[banco];
       const { latestRows, dates, latestDate } = ctx[banco];
       document.getElementById('tituloAtual').textContent = 'Preçário atual — ' + BANCOS[banco].label + ' · ' + fin;
       renderCard('boardAtual', banco, fin, 'current', latestRows);
