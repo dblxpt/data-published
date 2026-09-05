@@ -8,26 +8,23 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    color-scheme: dark;
-    --bg: #0A1416;
-    --surface: #101C1F;
-    --surface-2: #16262A;
-    --surface-3: #1C2E32;
-    --border: #223438;
-    --border-strong: #324B50;
-    --ink: #EDF5F6;
-    --ink-2: #9FB7BC;
-    --ink-3: #6B848A;
-    --accent: #33C9E8;
-    --accent-ink: #B7EDF7;
-    --good: #34D399;
-    --good-ink: #0B2B21;
-    --bad: #F0654B;
-    --bad-ink: #3A160F;
-    --flag: #E8B94B;
-    --seq-lo: #142428;
-    --seq-hi: #1F6E80;
-    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 10px 28px rgba(0,0,0,.4);
+    color-scheme: light;
+    --bg: #F4F7F6;
+    --surface: #FFFFFF;
+    --surface-2: #EDF3F2;
+    --surface-3: #142A30;
+    --border: #D7E1DF;
+    --border-strong: #BCCBC9;
+    --ink: #142A30;
+    --ink-2: #4E6870;
+    --ink-3: #7C939A;
+    --accent: #008A9E;
+    --accent-ink: #05616F;
+    --on-accent: #FFFFFF;
+    --good: #197A44;
+    --bad: #B23A22;
+    --flag: #92660A;
+    --shadow: 0 1px 2px rgba(20,42,48,.07), 0 8px 22px rgba(20,42,48,.08);
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); }
@@ -57,7 +54,7 @@
     background: var(--surface); color: var(--ink-2);
   }
   .fin-btn:hover { color: var(--ink); border-color: var(--ink-3); }
-  .fin-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #05262E; }
+  .fin-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
   .fin-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   section.block { margin-top: 44px; }
@@ -120,17 +117,17 @@
   table.grid td.delta:hover { outline: 2px solid var(--ink-3); outline-offset: -2px; z-index: 1; position: relative; }
 
   #tooltip {
-    position: fixed; pointer-events: none; background: var(--surface-3); color: var(--ink);
-    border: 1px solid var(--border-strong); font-size: 12.5px; padding: 11px 13px; border-radius: 10px;
+    position: fixed; pointer-events: none; background: var(--surface-3); color: #F4F7F6;
+    border: 1px solid rgba(255,255,255,.14); font-size: 12.5px; padding: 11px 13px; border-radius: 10px;
     box-shadow: var(--shadow); z-index: 50; min-width: 190px; opacity: 0; transition: opacity .08s ease;
   }
   #tooltip.show { opacity: 1; }
   #tooltip .tt-title { font-weight: 700; margin-bottom: 7px; font-size: 12.5px; }
   #tooltip .tt-row { display: flex; justify-content: space-between; gap: 16px; font-family: "IBM Plex Mono", monospace; }
   #tooltip .tt-row + .tt-row { margin-top: 3px; }
-  #tooltip .tt-k { color: var(--ink-2); font-family: "IBM Plex Sans", sans-serif; }
-  #tooltip .tt-arrow { color: var(--ink-3); margin: 0 5px; }
-  #tooltip .tt-sec { margin-top: 8px; padding-top: 7px; border-top: 1px solid var(--border); }
+  #tooltip .tt-k { color: #A9C0C5; font-family: "IBM Plex Sans", sans-serif; }
+  #tooltip .tt-arrow { color: #7E969B; margin: 0 5px; }
+  #tooltip .tt-sec { margin-top: 8px; padding-top: 7px; border-top: 1px solid rgba(255,255,255,.14); }
 
   .note {
     font-size: 13.5px; color: var(--ink-2); background: var(--surface); border: 1px solid var(--border);
