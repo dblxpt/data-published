@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>COF</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0A1416;
+    --surface: #101C1F;
+    --surface-2: #16262A;
+    --surface-3: #1C2E32;
+    --border: #223438;
+    --border-strong: #324B50;
+    --ink: #EDF5F6;
+    --ink-2: #9FB7BC;
+    --ink-3: #6B848A;
+    --accent: #33C9E8;
+    --accent-ink: #B7EDF7;
+    --good: #34D399;
+    --good-ink: #0B2B21;
+    --bad: #F0654B;
+    --bad-ink: #3A160F;
+    --flag: #E8B94B;
+    --seq-lo: #142428;
+    --seq-hi: #1F6E80;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 10px 28px rgba(0,0,0,.4);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); }
+  body {
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  .wrap { max-width: 1400px; margin: 0 auto; padding: 36px 24px 70px; }
+
+  h1, h2 { margin: 0; text-wrap: balance; }
+  .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--accent-ink); margin: 0 0 10px; }
+  h1 { font-size: clamp(28px, 4vw, 38px); font-weight: 700; letter-spacing: -0.01em; }
+  .subtitle { margin: 12px 0 0; max-width: 68ch; color: var(--ink-2); font-size: 15.5px; }
+
+  .meta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+  .pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); font-size: 13px; color: var(--ink-2); box-shadow: var(--shadow); }
+  .pill b { color: var(--ink); font-weight: 600; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+
+  .fin-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+  .fin-btn {
+    appearance: none; cursor: pointer; font: inherit; font-weight: 600; font-size: 14.5px;
+    padding: 11px 18px; border-radius: 10px; border: 1px solid var(--border-strong);
+    background: var(--surface); color: var(--ink-2);
+  }
+  .fin-btn:hover { color: var(--ink); border-color: var(--ink-3); }
+  .fin-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #05262E; }
+  .fin-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  section.block { margin-top: 44px; }
+  .block-head { margin-bottom: 16px; }
+  .block-head h2 { font-size: 19px; font-weight: 700; }
+  .block-head p.hint { margin: 4px 0 0; color: var(--ink-2); font-size: 13.5px; max-width: 70ch; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: var(--shadow); overflow: hidden;
+  }
+  .card-head {
+    padding: 13px 16px; border-bottom: 1px solid var(--border);
+    font-weight: 600; font-size: 14.5px; color: var(--ink);
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .card-head .n { font-size: 11px; font-weight: 500; color: var(--ink-3); }
+  .scroll-x { overflow-x: auto; }
+
+  table.grid { border-collapse: separate; border-spacing: 0; width: 100%; }
+  table.grid th, table.grid td { white-space: nowrap; }
+  table.grid thead th {
+    font-family: "IBM Plex Mono", monospace; font-size: 11.5px; font-weight: 600;
+    color: var(--ink-2); padding: 8px 6px; text-align: center;
+    border-bottom: 1px solid var(--border-strong);
+    position: sticky; top: 0; background: var(--surface); z-index: 1;
+  }
+  table.grid thead th.corner {
+    text-align: left; color: var(--ink-3); font-family: "IBM Plex Sans", sans-serif; font-weight: 600;
+    position: sticky; left: 0; z-index: 2; background: var(--surface);
+    padding-left: 14px;
+  }
+  table.grid tbody th {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px; font-weight: 600; color: var(--ink);
+    text-align: right; padding: 0 10px 0 14px; white-space: nowrap;
+    position: sticky; left: 0; background: var(--surface); border-right: 1px solid var(--border-strong);
+    height: 46px;
+  }
+  table.grid tbody th.irregular { border-top: 2px dashed var(--flag); color: var(--flag); }
+  table.grid tbody th .flag-mark { color: var(--flag); font-weight: 700; margin-left: 2px; }
+  table.grid td {
+    padding: 0; height: 46px; width: 60px; border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+  table.grid td .cell {
+    height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1px; padding: 3px 2px; cursor: default;
+  }
+  table.grid td .tan { font-family: "IBM Plex Mono", monospace; font-size: 14px; font-weight: 700; color: var(--accent-ink); }
+  table.grid td .presta { font-family: "IBM Plex Mono", monospace; font-size: 10px; font-weight: 500; color: var(--ink-2); }
+  table.grid td.empty { background: repeating-linear-gradient(135deg, var(--surface-2) 0 6px, var(--surface) 6px 12px); }
+  table.grid tr.irregular td { border-top: 2px dashed var(--flag); }
+  table.grid td:not(.empty):not(.delta):hover { outline: 2px solid var(--accent); outline-offset: -2px; z-index: 1; position: relative; }
+
+  table.grid td.delta .tan.up { color: var(--bad); }
+  table.grid td.delta .tan.down { color: var(--good); }
+  table.grid td.delta .presta.up { color: var(--bad); }
+  table.grid td.delta .presta.down { color: var(--good); }
+  table.grid td.delta .tan.flat, table.grid td.delta .presta.flat { color: var(--ink-3); }
+  table.grid td.delta:hover { outline: 2px solid var(--ink-3); outline-offset: -2px; z-index: 1; position: relative; }
+
+  #tooltip {
+    position: fixed; pointer-events: none; background: var(--surface-3); color: var(--ink);
+    border: 1px solid var(--border-strong); font-size: 12.5px; padding: 11px 13px; border-radius: 10px;
+    box-shadow: var(--shadow); z-index: 50; min-width: 190px; opacity: 0; transition: opacity .08s ease;
+  }
+  #tooltip.show { opacity: 1; }
+  #tooltip .tt-title { font-weight: 700; margin-bottom: 7px; font-size: 12.5px; }
+  #tooltip .tt-row { display: flex; justify-content: space-between; gap: 16px; font-family: "IBM Plex Mono", monospace; }
+  #tooltip .tt-row + .tt-row { margin-top: 3px; }
+  #tooltip .tt-k { color: var(--ink-2); font-family: "IBM Plex Sans", sans-serif; }
+  #tooltip .tt-arrow { color: var(--ink-3); margin: 0 5px; }
+  #tooltip .tt-sec { margin-top: 8px; padding-top: 7px; border-top: 1px solid var(--border); }
+
+  .note {
+    font-size: 13.5px; color: var(--ink-2); background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  .error { font-size: 13.5px; color: var(--ink); background: var(--surface); border: 1px solid var(--bad); border-radius: 12px; padding: 16px 18px; }
+  .error code { font-family: "IBM Plex Mono", monospace; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+
+  footer { margin-top: 54px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--ink-3); display: flex; flex-direction: column; gap: 6px; }
+  footer .flag-mark { color: var(--flag); font-weight: 700; }
+
+  @media (max-width: 620px) {
+    .wrap { padding: 24px 14px 50px; }
+    table.grid thead th { font-size: 10px; padding: 6px 3px; }
+    table.grid thead th.corner { padding-left: 8px; }
+    table.grid tbody th { font-size: 10.5px; padding: 0 6px 0 8px; }
+    table.grid td { width: 46px; height: 40px; }
+    table.grid td .tan { font-size: 12px; }
+    table.grid td .presta { font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Dados públicos · crédito pessoal</p>
+    <h1 id="pageTitle">COF</h1>
+    <p class="subtitle">TAN e prestação mensal de um simulador de crédito pessoal português, por montante (linhas) e prazo (colunas). Estrutura de quadro igual em todas as finalidades — células vazias são combinações sem oferta.</p>
+    <div class="meta-row" id="metaRow">
+      <span class="pill"><span class="dot"></span>A carregar…</span>
+    </div>
+    <div class="fin-buttons" id="finButtons" role="group" aria-label="Finalidade do crédito" hidden></div>
+  </header>
+
+  <div id="app" hidden>
+    <section class="block" id="secAtual">
+      <div class="block-head">
+        <h2 id="tituloAtual">Preçário atual</h2>
+        <p class="hint">Em cada célula: TAN (em destaque) e prestação mensal (por baixo, mais pequeno). Passa o rato (ou toca) numa célula para veres também a TAEG e o MTIC.</p>
+      </div>
+      <div id="boardAtual"></div>
+    </section>
+
+    <section class="block" id="secDelta">
+      <div class="block-head">
+        <h2>Alterações face ao último preçário diferente</h2>
+        <p class="hint" id="hintDelta">Diferença de TAN (pontos percentuais) e de prestação (€) entre a recolha atual e a última vez que este preçário foi diferente — pode ter sido há um dia, uma semana ou vários meses.</p>
+      </div>
+      <div id="boardDelta"></div>
+    </section>
+
+    <section class="block" id="secAnterior">
+      <div class="block-head">
+        <h2>Preçário anterior</h2>
+        <p class="hint" id="hintAnterior"></p>
+      </div>
+      <div id="boardAnterior"></div>
+    </section>
+  </div>
+
+  <div id="errorHost"></div>
+
+  <footer id="footer" hidden>
+    <span><span class="flag-mark">▨</span> montante mínimo real da finalidade, abaixo do escalão padrão de 5.000 € (não é um valor redondo).</span>
+    <span>TAN — Taxa Anual Nominal. Prestação sem seguro. Valores lidos diretamente do simulador público de um prestador de crédito, sem qualquer cálculo próprio.</span>
+    <span>Sujeitos a análise de risco individual — não constituem uma proposta de crédito.</span>
+  </footer>
+
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+(function () {
+  const STEP_MONTANTE = 5000;
+
+  const fmtPct = v => v.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+  const fmtPP = v => (v > 0 ? '+' : '') + v.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + 'pp';
+  const fmtEur0 = v => v.toLocaleString('pt-PT', { maximumFractionDigits: 0 }) + ' €';
+  const fmtEur2 = v => v.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  const fmtEurDelta = v => (v > 0 ? '+' : '') + v.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  const fmtDate = d => new Date(d + 'T00:00:00').toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' });
+  // rotulo compacto para a coluna fixa de montante (cabe em ecras estreitos) -
+  // o valor completo continua sempre visivel no tooltip
+  const fmtEurCompact = v => {
+    if (v % 1000 === 0) return (v / 1000) + 'k €';
+    if (v % 100 === 0) return (v / 1000).toLocaleString('pt-PT', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'k €';
+    return fmtEur0(v);
+  };
+
+  function showError(title, detail) {
+    document.getElementById('errorHost').innerHTML = `<div class="error"><strong>${title}</strong><br>${detail}</div>`;
+  }
+
+  const tooltip = document.getElementById('tooltip');
+  function moveTooltip(evt) {
+    const pad = 16;
+    let x = evt.clientX + pad, y = evt.clientY + pad;
+    const rect = tooltip.getBoundingClientRect();
+    if (x + rect.width > window.innerWidth) x = evt.clientX - rect.width - pad;
+    if (y + rect.height > window.innerHeight) y = evt.clientY - rect.height - pad;
+    tooltip.style.left = x + 'px';
+    tooltip.style.top = y + 'px';
+  }
+  function hideTooltip() { tooltip.classList.remove('show'); }
+  // em touch nao ha "mouseleave" fiavel depois de tocar numa celula - sem
+  // isto o tooltip ficava preso no ecra ate se tocar noutra celula. Fecha
+  // sempre que se toca/clica fora de uma celula de dados.
+  document.addEventListener('click', evt => {
+    if (!evt.target.closest('td[data-m]')) hideTooltip();
+  });
+  document.addEventListener('touchstart', evt => {
+    if (!evt.target.closest('td[data-m]')) hideTooltip();
+  }, { passive: true });
+  function showTooltipCurrent(evt, row) {
+    tooltip.innerHTML = `
+      <div class="tt-title">${fmtEur0(row.m)} · ${row.p} meses</div>
+      <div class="tt-row"><span class="tt-k">TAN</span><span>${fmtPct(row.tan)}</span></div>
+      <div class="tt-row"><span class="tt-k">TAEG</span><span>${fmtPct(row.taeg)}</span></div>
+      <div class="tt-row"><span class="tt-k">Prestação</span><span>${fmtEur2(row.presta)}/mês</span></div>
+      <div class="tt-row"><span class="tt-k">MTIC</span><span>${fmtEur2(row.mtic)}</span></div>
+    `;
+    tooltip.classList.add('show');
+    moveTooltip(evt);
+  }
+  function showTooltipDelta(evt, row, prevRow) {
+    tooltip.innerHTML = `
+      <div class="tt-title">${fmtEur0(row.m)} · ${row.p} meses</div>
+      <div class="tt-row"><span class="tt-k">TAN</span><span>${fmtPct(prevRow.tan)}<span class="tt-arrow">→</span>${fmtPct(row.tan)}</span></div>
+      <div class="tt-row"><span class="tt-k">TAEG</span><span>${fmtPct(prevRow.taeg)}<span class="tt-arrow">→</span>${fmtPct(row.taeg)}</span></div>
+      <div class="tt-row"><span class="tt-k">Prestação</span><span>${fmtEur2(prevRow.presta)}<span class="tt-arrow">→</span>${fmtEur2(row.presta)}</span></div>
+      <div class="tt-row"><span class="tt-k">MTIC</span><span>${fmtEur2(prevRow.mtic)}<span class="tt-arrow">→</span>${fmtEur2(row.mtic)}</span></div>
+    `;
+    tooltip.classList.add('show');
+    moveTooltip(evt);
+  }
+
+  function parseCsv(text) {
+    const lines = text.trim().split(/\r?\n/);
+    const headers = lines[0].split(',');
+    return lines.slice(1).map(line => {
+      const cols = line.split(',');
+      const row = {};
+      headers.forEach((h, i) => row[h] = cols[i]);
+      return {
+        d: row.data_recolha, f: row.finalidade,
+        m: parseFloat(row.montante_eur), p: parseInt(row.prazo_meses, 10),
+        presta: parseFloat(row.prestacao_mensal_eur), tan: parseFloat(row.tan_pct),
+        taeg: parseFloat(row.taeg_pct), mtic: parseFloat(row.mtic_eur),
+      };
+    });
+  }
+
+  // Pagina generica, reutilizavel para varios bancos: por omissao le
+  // "./cof_historico.csv" (mesma pasta) e mostra o titulo "COF", mas
+  // ambos podem ser trocados por query string, ex.:
+  //   dash.html?src=../outro-banco/historico.csv&nome=XYZ
+  // para reutilizar exatamente o mesmo look-and-feel noutro crawler.
+  const params = new URLSearchParams(location.search);
+  const csvSrc = params.get('src') || './cof_historico.csv';
+  const pageLabel = params.get('nome') || 'COF';
+  document.title = pageLabel;
+  document.getElementById('pageTitle').textContent = pageLabel;
+
+  fetch(csvSrc, { cache: 'no-store' })
+    .then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.text(); })
+    .then(text => init(parseCsv(text)))
+    .catch(err => showError(
+      `Não foi possível carregar ${csvSrc}.`,
+      `Esta página lê o histórico CSV (por omissão, <code>cof_historico.csv</code> na mesma pasta) — só funciona
+       servida por http(s) (ex.: GitHub Pages), não ao abrir o ficheiro diretamente (<code>file://</code> bloqueia
+       esse pedido). Detalhe técnico: ${err.message}`
+    ));
+
+  function init(DATA) {
+    const order = ['Pagar Despesas / Férias e Lazer', 'Lar e Recheio', 'Formação', 'Eficiência Energética'];
+    const finalidades = [...new Set(DATA.map(r => r.f))].sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    const dates = [...new Set(DATA.map(r => r.d))].sort();
+    const latestDate = dates[dates.length - 1];
+
+    const allPrazos = [...new Set(DATA.map(r => r.p))].sort((a, b) => a - b);
+    const allMontantes = [...new Set(DATA.map(r => r.m))].sort((a, b) => a - b);
+    const irregulares = new Set(allMontantes.filter(m => Math.round(m) % STEP_MONTANTE !== 0));
+
+    const latestRows = DATA.filter(r => r.d === latestDate);
+    document.getElementById('metaRow').innerHTML = `
+      <span class="pill"><span class="dot"></span>Última recolha: <b>${fmtDate(latestDate)}</b></span>
+      <span class="pill">${latestRows.length} combinações · ${finalidades.length} finalidades · ${dates.length} recolha${dates.length === 1 ? '' : 's'} no histórico</span>
+    `;
+    document.getElementById('app').hidden = false;
+    document.getElementById('footer').hidden = false;
+
+    const state = { fin: finalidades[0] };
+
+    function buildIndex(rows) {
+      const idx = {};
+      rows.forEach(r => idx[r.f + '|' + r.m + '|' + r.p] = r);
+      return idx;
+    }
+
+    // Para a finalidade dada, encontra a recolha mais recente ANTES da
+    // atual em que o preçário (TAN ou prestação, em qualquer combinação)
+    // era diferente do que é hoje - pode ser ontem, há uma semana ou há
+    // varios meses. Devolve a data encontrada, ou null se nunca mudou
+    // (ou so ha uma recolha no historico).
+    function findPreviousDifferentDate(fin) {
+      const curRows = latestRows.filter(r => r.f === fin);
+      const curIdx = {};
+      curRows.forEach(r => curIdx[r.m + '|' + r.p] = r);
+      for (let i = dates.length - 2; i >= 0; i--) {
+        const d = dates[i];
+        const rowsAtD = DATA.filter(r => r.d === d && r.f === fin);
+        if (!rowsAtD.length) continue;
+        const idxD = {};
+        rowsAtD.forEach(r => idxD[r.m + '|' + r.p] = r);
+        let differs = Object.keys(curIdx).some(k => {
+          const old = idxD[k];
+          if (!old) return true;
+          const cur = curIdx[k];
+          return Math.abs(old.tan - cur.tan) > 0.005 || Math.abs(old.presta - cur.presta) > 0.005;
+        });
+        if (!differs) differs = Object.keys(idxD).some(k => !(k in curIdx));
+        if (differs) return d;
+      }
+      return null;
+    }
+
+    function tableHtml(fin, cellRenderer) {
+      const irregular = irregulares.has;
+      let html = '<div class="scroll-x"><table class="grid"><thead><tr><th class="corner">montante \\ prazo</th>';
+      allPrazos.forEach(p => html += `<th>${p}m</th>`);
+      html += '</tr></thead><tbody>';
+      allMontantes.forEach(m => {
+        const irr = irregulares.has(m);
+        html += `<tr class="${irr ? 'irregular' : ''}"><th class="${irr ? 'irregular' : ''}" title="${fmtEur0(m)}">${fmtEurCompact(m)}${irr ? '<span class="flag-mark">▨</span>' : ''}</th>`;
+        allPrazos.forEach(p => { html += cellRenderer(fin, m, p); });
+        html += '</tr>';
+      });
+      html += '</tbody></table></div>';
+      return html;
+    }
+
+    function renderCard(hostId, fin, kind, rows, compareRows) {
+      const idx = buildIndex(rows);
+      const prevIdx = compareRows ? buildIndex(compareRows) : null;
+
+      let html = `<div class="card"><div class="card-head">${fin}</div>`;
+      html += tableHtml(fin, (f, m, p) => {
+        const row = idx[f + '|' + m + '|' + p];
+        if (kind === 'delta') {
+          const prevRow = prevIdx[f + '|' + m + '|' + p];
+          if (!row || !prevRow) return '<td class="empty"></td>';
+          const dTan = row.tan - prevRow.tan;
+          const dPresta = row.presta - prevRow.presta;
+          const clsTan = Math.abs(dTan) < 0.005 ? 'flat' : (dTan > 0 ? 'up' : 'down');
+          const clsPresta = Math.abs(dPresta) < 0.005 ? 'flat' : (dPresta > 0 ? 'up' : 'down');
+          return `<td class="delta" data-m="${m}" data-p="${p}">
+              <div class="cell">
+                <div class="tan ${clsTan}">${Math.abs(dTan) < 0.005 ? '=' : fmtPP(dTan)}</div>
+                <div class="presta ${clsPresta}">${Math.abs(dPresta) < 0.005 ? '=' : fmtEurDelta(dPresta)}</div>
+              </div>
+            </td>`;
+        }
+        if (!row) return '<td class="empty"></td>';
+        return `<td data-m="${m}" data-p="${p}">
+            <div class="cell">
+              <div class="tan">${fmtPct(row.tan)}</div>
+              <div class="presta">${fmtEur2(row.presta)}</div>
+            </div>
+          </td>`;
+      });
+      html += '</div>';
+      const host = document.getElementById(hostId);
+      host.innerHTML = html;
+
+      host.querySelectorAll('td[data-m]').forEach(td => {
+        const m = Number(td.dataset.m), p = Number(td.dataset.p);
+        const row = idx[fin + '|' + m + '|' + p];
+        if (kind === 'delta') {
+          const prevRow = prevIdx[fin + '|' + m + '|' + p];
+          td.addEventListener('mouseenter', e => showTooltipDelta(e, row, prevRow));
+        } else {
+          td.addEventListener('mouseenter', e => showTooltipCurrent(e, row));
+        }
+        td.addEventListener('mousemove', moveTooltip);
+        td.addEventListener('mouseleave', hideTooltip);
+      });
+    }
+
+    function renderFinButtons() {
+      const host = document.getElementById('finButtons');
+      host.hidden = false;
+      host.innerHTML = '';
+      finalidades.forEach(fin => {
+        const btn = document.createElement('button');
+        btn.className = 'fin-btn';
+        btn.textContent = fin;
+        btn.setAttribute('aria-pressed', fin === state.fin ? 'true' : 'false');
+        btn.addEventListener('click', () => { state.fin = fin; renderFinButtons(); renderAll(); });
+        host.appendChild(btn);
+      });
+    }
+
+    function renderAll() {
+      const fin = state.fin;
+      document.getElementById('tituloAtual').textContent = 'Preçário atual — ' + fin;
+      renderCard('boardAtual', fin, 'current', latestRows);
+
+      const prevDate = findPreviousDifferentDate(fin);
+      if (prevDate) {
+        const prevRows = DATA.filter(r => r.d === prevDate && r.f === fin);
+        document.getElementById('hintDelta').innerHTML =
+          `Diferença face à última vez que este preçário foi diferente: <b>${fmtDate(prevDate)}</b>.`;
+        document.getElementById('hintAnterior').innerHTML = `Preçário de <b>${fmtDate(prevDate)}</b> — a última recolha antes desta alteração.`;
+        renderCard('boardDelta', fin, 'delta', latestRows, prevRows);
+        renderCard('boardAnterior', fin, 'current', prevRows);
+      } else {
+        const msg = dates.length > 1
+          ? `Não há nenhuma alteração de preço registada para "${fin}" em todo o histórico disponível (${dates.length} recolhas, desde ${fmtDate(dates[0])}).`
+          : `Só há uma recolha no histórico até agora (${fmtDate(latestDate)}). Esta secção atualiza-se assim que o preçário desta finalidade mudar.`;
+        document.getElementById('boardDelta').innerHTML = `<div class="note">${msg}</div>`;
+        document.getElementById('boardAnterior').innerHTML = `<div class="note">${msg}</div>`;
+        document.getElementById('hintDelta').textContent = 'Diferença de TAN (pontos percentuais) e de prestação (€) entre a recolha atual e a última vez que este preçário foi diferente.';
+        document.getElementById('hintAnterior').textContent = 'Ainda sem uma alteração registada.';
+      }
+    }
+
+    renderFinButtons();
+    renderAll();
+  }
+})();
+</script>
+</body>
+</html>
