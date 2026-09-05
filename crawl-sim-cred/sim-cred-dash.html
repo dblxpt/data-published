@@ -489,8 +489,14 @@
         btn.setAttribute('aria-pressed', id === state.banco ? 'true' : 'false');
         btn.addEventListener('click', () => {
           if (!ctx[id]) return;
+          // mantem a MESMA POSICAO na lista de finalidades ao trocar de
+          // banco, em vez de saltar sempre para a primeira - so cai para
+          // a ultima disponivel se o banco novo tiver menos finalidades
+          // do que o indice atual.
+          const idxAtual = ctx[state.banco].finalidades.indexOf(state.fin);
           state.banco = id;
-          state.fin = ctx[id].finalidades[0];
+          const finsNovas = ctx[id].finalidades;
+          state.fin = finsNovas[Math.min(idxAtual, finsNovas.length - 1)];
           renderBancoButtons();
           renderFinButtons();
           renderMetaRow();
