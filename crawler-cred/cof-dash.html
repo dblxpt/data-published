@@ -50,12 +50,20 @@
   .pill b { color: var(--ink); font-weight: 600; }
   .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
 
+  .fin-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+  .fin-btn {
+    appearance: none; cursor: pointer; font: inherit; font-weight: 600; font-size: 14.5px;
+    padding: 11px 18px; border-radius: 10px; border: 1px solid var(--border-strong);
+    background: var(--surface); color: var(--ink-2);
+  }
+  .fin-btn:hover { color: var(--ink); border-color: var(--ink-3); }
+  .fin-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #05262E; }
+  .fin-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
   section.block { margin-top: 44px; }
   .block-head { margin-bottom: 16px; }
   .block-head h2 { font-size: 19px; font-weight: 700; }
   .block-head p.hint { margin: 4px 0 0; color: var(--ink-2); font-size: 13.5px; max-width: 70ch; }
-
-  .board { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(560px, 100%), 1fr)); gap: 18px; align-items: start; }
 
   .card {
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
@@ -116,10 +124,6 @@
   .error { font-size: 13.5px; color: var(--ink); background: var(--surface); border: 1px solid var(--bad); border-radius: 12px; padding: 16px 18px; }
   .error code { font-family: "IBM Plex Mono", monospace; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
 
-  .legend { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 10px; font-size: 12.5px; color: var(--ink-2); }
-  .legend .item { display: flex; align-items: center; gap: 7px; }
-  .legend .swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; }
-
   footer { margin-top: 54px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--ink-3); display: flex; flex-direction: column; gap: 6px; }
   footer .flag-mark { color: var(--flag); font-weight: 700; }
 
@@ -134,25 +138,26 @@
   <header>
     <p class="eyebrow">Dados públicos · crédito pessoal</p>
     <h1>COF</h1>
-    <p class="subtitle">TAN e prestação mensal de um simulador de crédito pessoal português, por montante (linhas) e prazo (colunas), para cada finalidade. Estrutura de quadro igual em todas as finalidades — células vazias são combinações sem oferta.</p>
+    <p class="subtitle">TAN e prestação mensal de um simulador de crédito pessoal português, por montante (linhas) e prazo (colunas). Estrutura de quadro igual em todas as finalidades — células vazias são combinações sem oferta.</p>
     <div class="meta-row" id="metaRow">
       <span class="pill"><span class="dot"></span>A carregar…</span>
     </div>
+    <div class="fin-buttons" id="finButtons" role="group" aria-label="Finalidade do crédito" hidden></div>
   </header>
 
   <div id="app" hidden>
     <section class="block" id="secAtual">
       <div class="block-head">
-        <h2>Preçário atual</h2>
+        <h2 id="tituloAtual">Preçário atual</h2>
         <p class="hint">Em cada célula: prestação mensal (em destaque) e TAN (por baixo, mais pequeno).</p>
       </div>
-      <div class="board" id="boardAtual"></div>
+      <div id="boardAtual"></div>
     </section>
 
     <section class="block" id="secDelta">
       <div class="block-head">
-        <h2>Alterações face à semana anterior</h2>
-        <p class="hint">Diferença de TAN (pontos percentuais) e de prestação (€) entre a recolha atual e a anterior.</p>
+        <h2>Alterações face ao último preçário diferente</h2>
+        <p class="hint" id="hintDelta">Diferença de TAN (pontos percentuais) e de prestação (€) entre a recolha atual e a última vez que este preçário foi diferente — pode ter sido há um dia, uma semana ou vários meses.</p>
       </div>
       <div id="boardDelta"></div>
     </section>
@@ -221,7 +226,6 @@
     const finalidades = [...new Set(DATA.map(r => r.f))].sort((a, b) => order.indexOf(a) - order.indexOf(b));
     const dates = [...new Set(DATA.map(r => r.d))].sort();
     const latestDate = dates[dates.length - 1];
-    const previousDate = dates.length >= 2 ? dates[dates.length - 2] : null;
 
     const allPrazos = [...new Set(DATA.map(r => r.p))].sort((a, b) => a - b);
     const allMontantes = [...new Set(DATA.map(r => r.m))].sort((a, b) => a - b);
@@ -230,19 +234,12 @@
     const latestRows = DATA.filter(r => r.d === latestDate);
     document.getElementById('metaRow').innerHTML = `
       <span class="pill"><span class="dot"></span>Última recolha: <b>${fmtDate(latestDate)}</b></span>
-      <span class="pill">${latestRows.length} combinações · ${finalidades.length} finalidades</span>
-      ${previousDate ? `<span class="pill">Recolha anterior: <b>${fmtDate(previousDate)}</b></span>` : ''}
+      <span class="pill">${latestRows.length} combinações · ${finalidades.length} finalidades · ${dates.length} recolha${dates.length === 1 ? '' : 's'} no histórico</span>
     `;
     document.getElementById('app').hidden = false;
     document.getElementById('footer').hidden = false;
 
-    function rangeFor(fin) {
-      // por finalidade, so mostramos as colunas/linhas onde ELA TEM dados
-      // em pelo menos uma data - mas a MESMA grelha universal (allPrazos/
-      // allMontantes) e usada como moldura para todas, para o quadro ficar
-      // com a mesma estrutura em todas as finalidades.
-      return { prazos: allPrazos, montantes: allMontantes };
-    }
+    const state = { fin: finalidades[0] };
 
     function buildIndex(rows) {
       const idx = {};
@@ -250,68 +247,116 @@
       return idx;
     }
 
+    // Para a finalidade dada, encontra a recolha mais recente ANTES da
+    // atual em que o preçário (TAN ou prestação, em qualquer combinação)
+    // era diferente do que é hoje - pode ser ontem, há uma semana ou há
+    // varios meses. Devolve a data encontrada, ou null se nunca mudou
+    // (ou so ha uma recolha no historico).
+    function findPreviousDifferentDate(fin) {
+      const curRows = latestRows.filter(r => r.f === fin);
+      const curIdx = {};
+      curRows.forEach(r => curIdx[r.m + '|' + r.p] = r);
+      for (let i = dates.length - 2; i >= 0; i--) {
+        const d = dates[i];
+        const rowsAtD = DATA.filter(r => r.d === d && r.f === fin);
+        if (!rowsAtD.length) continue;
+        const idxD = {};
+        rowsAtD.forEach(r => idxD[r.m + '|' + r.p] = r);
+        let differs = Object.keys(curIdx).some(k => {
+          const old = idxD[k];
+          if (!old) return true;
+          const cur = curIdx[k];
+          return Math.abs(old.tan - cur.tan) > 0.005 || Math.abs(old.presta - cur.presta) > 0.005;
+        });
+        if (!differs) differs = Object.keys(idxD).some(k => !(k in curIdx));
+        if (differs) return d;
+      }
+      return null;
+    }
+
     function tableHtml(fin, cellRenderer) {
-      const { prazos, montantes } = rangeFor(fin);
+      const irregular = irregulares.has;
       let html = '<div class="scroll-x"><table class="grid"><thead><tr><th class="corner">montante \\ prazo</th>';
-      prazos.forEach(p => html += `<th>${p}m</th>`);
+      allPrazos.forEach(p => html += `<th>${p}m</th>`);
       html += '</tr></thead><tbody>';
-      montantes.forEach(m => {
-        const irregular = irregulares.has(m);
-        html += `<tr class="${irregular ? 'irregular' : ''}"><th class="${irregular ? 'irregular' : ''}">${fmtEur0(m)}${irregular ? '<span class="flag-mark">▨</span>' : ''}</th>`;
-        prazos.forEach(p => { html += cellRenderer(fin, m, p); });
+      allMontantes.forEach(m => {
+        const irr = irregulares.has(m);
+        html += `<tr class="${irr ? 'irregular' : ''}"><th class="${irr ? 'irregular' : ''}">${fmtEur0(m)}${irr ? '<span class="flag-mark">▨</span>' : ''}</th>`;
+        allPrazos.forEach(p => { html += cellRenderer(fin, m, p); });
         html += '</tr>';
       });
       html += '</tbody></table></div>';
       return html;
     }
 
-    function renderBoard(hostId, rows, kind, compareRows) {
+    function renderCard(hostId, fin, kind, rows, compareRows) {
       const idx = buildIndex(rows);
       const prevIdx = compareRows ? buildIndex(compareRows) : null;
-      let html = '<div class="board">';
-      finalidades.forEach(fin => {
-        html += `<div class="card"><div class="card-head">${fin}</div>`;
-        html += tableHtml(fin, (f, m, p) => {
-          const row = idx[f + '|' + m + '|' + p];
-          if (kind === 'delta') {
-            const prevRow = prevIdx[f + '|' + m + '|' + p];
-            if (!row || !prevRow) return '<td class="empty"></td>';
-            const dTan = row.tan - prevRow.tan;
-            const dPresta = row.presta - prevRow.presta;
-            const clsTan = Math.abs(dTan) < 0.005 ? 'flat' : (dTan > 0 ? 'up' : 'down');
-            const clsPresta = Math.abs(dPresta) < 0.005 ? 'flat' : (dPresta > 0 ? 'up' : 'down');
-            return `<td class="delta"><div class="cell">
-                <div class="presta ${clsPresta}">${Math.abs(dPresta) < 0.005 ? '=' : fmtEurDelta(dPresta)}</div>
-                <div class="tan ${clsTan}">${Math.abs(dTan) < 0.005 ? '=' : fmtPP(dTan)}</div>
-              </div></td>`;
-          }
-          if (!row) return '<td class="empty"></td>';
-          return `<td><div class="cell">
-              <div class="presta">${fmtEur2(row.presta)}</div>
-              <div class="tan">${fmtPct(row.tan)}</div>
+      let html = `<div class="card"><div class="card-head">${fin}</div>`;
+      html += tableHtml(fin, (f, m, p) => {
+        const row = idx[f + '|' + m + '|' + p];
+        if (kind === 'delta') {
+          const prevRow = prevIdx[f + '|' + m + '|' + p];
+          if (!row || !prevRow) return '<td class="empty"></td>';
+          const dTan = row.tan - prevRow.tan;
+          const dPresta = row.presta - prevRow.presta;
+          const clsTan = Math.abs(dTan) < 0.005 ? 'flat' : (dTan > 0 ? 'up' : 'down');
+          const clsPresta = Math.abs(dPresta) < 0.005 ? 'flat' : (dPresta > 0 ? 'up' : 'down');
+          return `<td class="delta"><div class="cell">
+              <div class="presta ${clsPresta}">${Math.abs(dPresta) < 0.005 ? '=' : fmtEurDelta(dPresta)}</div>
+              <div class="tan ${clsTan}">${Math.abs(dTan) < 0.005 ? '=' : fmtPP(dTan)}</div>
             </div></td>`;
-        });
-        html += '</div>';
+        }
+        if (!row) return '<td class="empty"></td>';
+        return `<td><div class="cell">
+            <div class="presta">${fmtEur2(row.presta)}</div>
+            <div class="tan">${fmtPct(row.tan)}</div>
+          </div></td>`;
       });
       html += '</div>';
       document.getElementById(hostId).innerHTML = html;
     }
 
-    // Preçário atual
-    renderBoard('boardAtual', latestRows, 'current');
-
-    // Alterações + Preçário anterior
-    if (previousDate) {
-      const previousRows = DATA.filter(r => r.d === previousDate);
-      document.getElementById('hintAnterior').textContent = `Recolha de ${fmtDate(previousDate)}.`;
-      renderBoard('boardDelta', latestRows, 'delta', previousRows);
-      renderBoard('boardAnterior', previousRows, 'current');
-    } else {
-      const msg = `<div class="note">O histórico só tem uma recolha até agora (${fmtDate(latestDate)}). Esta secção fica disponível a partir da segunda recolha semanal (próxima terça-feira).</div>`;
-      document.getElementById('boardDelta').innerHTML = msg;
-      document.getElementById('boardAnterior').innerHTML = msg;
-      document.getElementById('hintAnterior').textContent = 'Ainda não há uma recolha anterior.';
+    function renderFinButtons() {
+      const host = document.getElementById('finButtons');
+      host.hidden = false;
+      host.innerHTML = '';
+      finalidades.forEach(fin => {
+        const btn = document.createElement('button');
+        btn.className = 'fin-btn';
+        btn.textContent = fin;
+        btn.setAttribute('aria-pressed', fin === state.fin ? 'true' : 'false');
+        btn.addEventListener('click', () => { state.fin = fin; renderFinButtons(); renderAll(); });
+        host.appendChild(btn);
+      });
     }
+
+    function renderAll() {
+      const fin = state.fin;
+      document.getElementById('tituloAtual').textContent = 'Preçário atual — ' + fin;
+      renderCard('boardAtual', fin, 'current', latestRows);
+
+      const prevDate = findPreviousDifferentDate(fin);
+      if (prevDate) {
+        const prevRows = DATA.filter(r => r.d === prevDate && r.f === fin);
+        document.getElementById('hintDelta').innerHTML =
+          `Diferença face à última vez que este preçário foi diferente: <b>${fmtDate(prevDate)}</b>.`;
+        document.getElementById('hintAnterior').innerHTML = `Preçário de <b>${fmtDate(prevDate)}</b> — a última recolha antes desta alteração.`;
+        renderCard('boardDelta', fin, 'delta', latestRows, prevRows);
+        renderCard('boardAnterior', fin, 'current', prevRows);
+      } else {
+        const msg = dates.length > 1
+          ? `Não há nenhuma alteração de preço registada para "${fin}" em todo o histórico disponível (${dates.length} recolhas, desde ${fmtDate(dates[0])}).`
+          : `Só há uma recolha no histórico até agora (${fmtDate(latestDate)}). Esta secção atualiza-se assim que o preçário desta finalidade mudar.`;
+        document.getElementById('boardDelta').innerHTML = `<div class="note">${msg}</div>`;
+        document.getElementById('boardAnterior').innerHTML = `<div class="note">${msg}</div>`;
+        document.getElementById('hintDelta').textContent = 'Diferença de TAN (pontos percentuais) e de prestação (€) entre a recolha atual e a última vez que este preçário foi diferente.';
+        document.getElementById('hintAnterior').textContent = 'Ainda sem uma alteração registada.';
+      }
+    }
+
+    renderFinButtons();
+    renderAll();
   }
 })();
 </script>

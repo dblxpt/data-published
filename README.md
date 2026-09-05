@@ -53,19 +53,20 @@ carrega a tabela directamente numa folha, pronta para graficos.
 
 Preçário (TAN/TAEG/MTIC/prestação) de um simulador de crédito pessoal
 português, para várias combinações de montante, prazo e finalidade.
-Atualizado semanalmente (à terça-feira). Codigo fonte num repositorio
-privado separado.
+Atualizado nos dias úteis. Codigo fonte num repositorio privado
+separado.
 
 - `crawler-cred/cof.csv` - snapshot mais recente
 - `crawler-cred/cof.json` - a mesma recolha em bruto (JSON completo)
 - `crawler-cred/cof_historico.csv` - histórico cumulativo (uma linha por
   combinação por dia de recolha)
 - `crawler-cred/cof-dash.html` - painel visual (tabelas de TAN e
-  prestação mensal por montante/prazo, uma por finalidade, lado a lado,
-  com preçário atual, alterações face à semana anterior e preçário
-  anterior), lê `cof_historico.csv` diretamente ao carregar a página
-  (não tem dados embutidos - fica sempre atualizado sozinho). Só
-  funciona servido por http(s) (ex.: GitHub Pages); aberto como ficheiro
+  prestação mensal por montante/prazo). Uma finalidade de cada vez,
+  escolhida por botão: preçário atual, alterações face à última recolha
+  em que o preçário foi diferente (pode ter sido há dias ou meses) e
+  esse preçário anterior. Lê `cof_historico.csv` diretamente ao carregar
+  a página (não tem dados embutidos - fica sempre atualizado sozinho).
+  Só funciona servido por http(s) (ex.: GitHub Pages); aberto como ficheiro
   local (`file://`) o browser bloqueia esse pedido e a página mostra um
   aviso a explicar.
 
