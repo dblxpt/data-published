@@ -86,37 +86,6 @@ GitHub Pages neste repositório (Settings → Pages → Deploy from branch →
 https://dblxpt.github.io/data-published/crawler-cred/cof-dash.html
 ```
 
-## Painel partilhado (`_shared/bank-dash.html`)
-
-O painel visual (tabelas TAN/prestação por finalidade) não vive duplicado
-em `crawler-cred/` — o código real está todo em **`_shared/bank-dash.html`**,
-uma página genérica que não sabe nada sobre "COF" ou Cofidis. Ela lê dois
-parâmetros da URL:
-
-- `src` — caminho (relativo a `_shared/`) para o `..._historico.csv` do
-  projeto a mostrar
-- `nome` — título a mostrar na página
-
-`crawler-cred/cof-dash.html` é só um redirecionamento de 3 linhas para
-`_shared/bank-dash.html?src=../crawler-cred/cof_historico.csv&nome=COF` —
-mantém o link antigo a funcionar sem duplicar código.
-
-**Para dar o mesmo visual a um novo crawler** (outro banco), o histórico
-desse crawler tem de sair com as mesmas colunas de `cof_historico.csv`
-(`data_recolha, finalidade, montante_eur, prazo_meses,
-prestacao_mensal_eur, taeg_pct, tan_pct, mtic_eur`). Feito isso, não é
-preciso copiar nem editar `_shared/bank-dash.html` — basta:
-
-1. Publicar o `..._historico.csv` desse banco numa pasta nova aqui (ex.
-   `outro-banco/historico.csv`), tal como o `crawler-cred` já faz.
-2. Ligar para `_shared/bank-dash.html?src=../outro-banco/historico.csv&nome=XYZ`
-   (ou criar um redirecionamento de 3 linhas como o de `cof-dash.html`,
-   se quiseres manter um URL fixo por banco).
-
-Qualquer alteração de aspeto visual (cores, fontes, layout) faz-se **uma
-única vez** em `_shared/bank-dash.html` e aplica-se a todos os bancos
-instantaneamente, sem tocar nas pastas de cada um.
-
 ## Nota
 
 Estes dados sao publicados "as-is", tal como calculados pelos scripts de
