@@ -49,18 +49,20 @@ https://raw.githubusercontent.com/dblxpt/data-published/main/routine-data-etf/hi
 Para Google Sheets, `=IMPORTDATA(url)` com um dos URLs `.csv` acima
 carrega a tabela directamente numa folha, pronta para graficos.
 
-### crawler-cred
+### crawl-sim-cred
 
-Preçário (TAN/TAEG/MTIC/prestação) de um simulador de crédito pessoal
-português, para várias combinações de montante, prazo e finalidade.
-Atualizado nos dias úteis. Codigo fonte num repositorio privado
-separado.
+Preçário (TAN/TAEG/MTIC/prestação) de simuladores públicos de crédito
+pessoal, para várias combinações de montante, prazo e finalidade — um
+banco de cada vez, a começar pela Cofidis. Atualizado nos dias úteis.
+Código fonte no repositório privado
+[`dblxpt/crawl-sim-cred`](https://github.com/dblxpt/crawl-sim-cred).
 
-- `crawler-cred/cof.csv` - snapshot mais recente
-- `crawler-cred/cof.json` - a mesma recolha em bruto (JSON completo)
-- `crawler-cred/cof_historico.csv` - histórico cumulativo (uma linha por
-  combinação por dia de recolha)
-- `crawler-cred/cof-dash.html` - painel visual (tabelas de TAN e
+- `crawl-sim-cred/cof.csv` - snapshot mais recente (Cofidis)
+- `crawl-sim-cred/cof.json` - a mesma recolha em bruto (JSON completo)
+- `crawl-sim-cred/cof_historico.csv` - histórico cumulativo (uma linha por
+  combinação por dia de recolha) - **única cópia deste histórico**; o
+  repositório privado não guarda duplicado
+- `crawl-sim-cred/cof-dash.html` - painel visual (tabelas de TAN e
   prestação mensal por montante/prazo). Uma finalidade de cada vez,
   escolhida por botão: preçário atual, alterações face à última recolha
   em que o preçário foi diferente (pode ter sido há dias ou meses) e
@@ -73,9 +75,9 @@ separado.
 Acesso directo (sem autenticacao, repositorio publico):
 
 ```
-https://raw.githubusercontent.com/dblxpt/data-published/main/crawler-cred/cof.csv
-https://raw.githubusercontent.com/dblxpt/data-published/main/crawler-cred/cof.json
-https://raw.githubusercontent.com/dblxpt/data-published/main/crawler-cred/cof_historico.csv
+https://raw.githubusercontent.com/dblxpt/data-published/main/crawl-sim-cred/cof.csv
+https://raw.githubusercontent.com/dblxpt/data-published/main/crawl-sim-cred/cof.json
+https://raw.githubusercontent.com/dblxpt/data-published/main/crawl-sim-cred/cof_historico.csv
 ```
 
 Para ver `cof-dash.html` como página (não como texto em bruto), ativar o
@@ -83,7 +85,7 @@ GitHub Pages neste repositório (Settings → Pages → Deploy from branch →
 `main` → `/ (root)`) e abrir:
 
 ```
-https://dblxpt.github.io/data-published/crawler-cred/cof-dash.html
+https://dblxpt.github.io/data-published/crawl-sim-cred/cof-dash.html
 ```
 
 ## Nota
