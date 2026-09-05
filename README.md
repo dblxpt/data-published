@@ -52,25 +52,33 @@ carrega a tabela directamente numa folha, pronta para graficos.
 ### crawl-sim-cred
 
 Preçário (TAN/TAEG/MTIC/prestação) de simuladores públicos de crédito
-pessoal, para várias combinações de montante, prazo e finalidade — um
-banco de cada vez, a começar pela Cofidis. Atualizado nos dias úteis.
-Código fonte no repositório privado
+pessoal, para várias combinações de montante, prazo e finalidade —
+Cofidis e Cetelem por agora. Atualizado nos dias úteis. Código fonte
+no repositório privado
 [`dblxpt/crawl-sim-cred`](https://github.com/dblxpt/crawl-sim-cred).
 
-- `crawl-sim-cred/cof.csv` - snapshot mais recente (Cofidis)
-- `crawl-sim-cred/cof.json` - a mesma recolha em bruto (JSON completo)
-- `crawl-sim-cred/cof_historico.csv` - histórico cumulativo (uma linha por
-  combinação por dia de recolha) - **única cópia deste histórico**; o
+- `crawl-sim-cred/cof.csv` / `cof.json` / `cof_historico.csv` - Cofidis
+  (snapshot mais recente, recolha em bruto, histórico cumulativo)
+- `crawl-sim-cred/cet.csv` / `cet.json` / `cet_historico.csv` - o mesmo,
+  para a Cetelem
+- Cada `*_historico.csv` é a **única cópia** desse histórico; o
   repositório privado não guarda duplicado
-- `crawl-sim-cred/cof-dash.html` - painel visual (tabelas de TAN e
-  prestação mensal por montante/prazo). Uma finalidade de cada vez,
-  escolhida por botão: preçário atual, alterações face à última recolha
-  em que o preçário foi diferente (pode ter sido há dias ou meses) e
-  esse preçário anterior. Lê `cof_historico.csv` diretamente ao carregar
-  a página (não tem dados embutidos - fica sempre atualizado sozinho).
-  Só funciona servido por http(s) (ex.: GitHub Pages); aberto como ficheiro
-  local (`file://`) o browser bloqueia esse pedido e a página mostra um
-  aviso a explicar.
+- `crawl-sim-cred/sim-cred-dash.html` - painel visual com os dois
+  bancos, um botão COF/CET para alternar entre eles e outro por
+  finalidade dentro do banco escolhido. A grelha de montante/prazo é
+  **partilhada entre os dois bancos** (a união dos valores de ambos) —
+  a mesma posição de célula representa sempre o mesmo montante/prazo,
+  mesmo ao trocar de banco, mesmo havendo escalões que só um dos dois
+  usa. Por finalidade mostra: preçário atual, alterações face à última
+  recolha em que o preçário foi diferente (pode ter sido há dias ou
+  meses) e esse preçário anterior. Lê os dois `*_historico.csv`
+  diretamente ao carregar a página (não tem dados embutidos - fica
+  sempre atualizado sozinho, e continua a funcionar com só um dos
+  bancos se o outro falhar a carregar). Só funciona servido por
+  http(s) (ex.: GitHub Pages); aberto como ficheiro local (`file://`)
+  o browser bloqueia esse pedido e a página mostra um aviso a explicar.
+- `crawl-sim-cred/cof-dash.html` - versão anterior, só Cofidis (mantida
+  por compatibilidade com quem já tenha este link).
 
 Acesso directo (sem autenticacao, repositorio publico):
 
@@ -78,14 +86,17 @@ Acesso directo (sem autenticacao, repositorio publico):
 https://raw.githubusercontent.com/dblxpt/data-published/main/crawl-sim-cred/cof.csv
 https://raw.githubusercontent.com/dblxpt/data-published/main/crawl-sim-cred/cof.json
 https://raw.githubusercontent.com/dblxpt/data-published/main/crawl-sim-cred/cof_historico.csv
+https://raw.githubusercontent.com/dblxpt/data-published/main/crawl-sim-cred/cet.csv
+https://raw.githubusercontent.com/dblxpt/data-published/main/crawl-sim-cred/cet.json
+https://raw.githubusercontent.com/dblxpt/data-published/main/crawl-sim-cred/cet_historico.csv
 ```
 
-Para ver `cof-dash.html` como página (não como texto em bruto), ativar o
-GitHub Pages neste repositório (Settings → Pages → Deploy from branch →
-`main` → `/ (root)`) e abrir:
+Para ver `sim-cred-dash.html` como página (não como texto em bruto),
+ativar o GitHub Pages neste repositório (Settings → Pages → Deploy
+from branch → `main` → `/ (root)`) e abrir:
 
 ```
-https://dblxpt.github.io/data-published/crawl-sim-cred/cof-dash.html
+https://dblxpt.github.io/data-published/crawl-sim-cred/sim-cred-dash.html
 ```
 
 ## Nota
