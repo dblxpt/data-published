@@ -5,45 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>COF</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    color-scheme: light;
-    --bg: #F4F7F6;
-    --surface: #FFFFFF;
-    --surface-2: #E9F0EF;
-    --ink: #142A30;
-    --ink-2: #4E6870;
-    --ink-3: #7C939A;
-    --border: #D7E1DF;
-    --border-strong: #BCCBC9;
-    --teal: #008A9E;
-    --teal-ink: #05616F;
-    --ochre: #C1741F;
-    --seq-lo: #E3F3F4;
-    --seq-hi: #063F49;
-    --shadow: 0 1px 2px rgba(20,42,48,.06), 0 6px 20px rgba(20,42,48,.07);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      color-scheme: dark;
-      --bg: #0D1719; --surface: #14262A; --surface-2: #1B2E32;
-      --ink: #EAF3F4; --ink-2: #9FB8BD; --ink-3: #6C868C;
-      --border: #24393D; --border-strong: #345054;
-      --teal: #23AFCB; --teal-ink: #7FD8EA; --ochre: #E0A050;
-      --seq-lo: #173238; --seq-hi: #6BE7F5;
-      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
-    }
-  }
-  :root[data-theme="dark"] {
     color-scheme: dark;
-    --bg: #0D1719; --surface: #14262A; --surface-2: #1B2E32;
-    --ink: #EAF3F4; --ink-2: #9FB8BD; --ink-3: #6C868C;
-    --border: #24393D; --border-strong: #345054;
-    --teal: #23AFCB; --teal-ink: #7FD8EA; --ochre: #E0A050;
-    --seq-lo: #173238; --seq-hi: #6BE7F5;
-    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    --bg: #0A1416;
+    --surface: #101C1F;
+    --surface-2: #16262A;
+    --surface-3: #1C2E32;
+    --border: #223438;
+    --border-strong: #324B50;
+    --ink: #EDF5F6;
+    --ink-2: #9FB7BC;
+    --ink-3: #6B848A;
+    --accent: #33C9E8;
+    --accent-ink: #B7EDF7;
+    --good: #34D399;
+    --good-ink: #0B2B21;
+    --bad: #F0654B;
+    --bad-ink: #3A160F;
+    --flag: #E8B94B;
+    --seq-lo: #142428;
+    --seq-hi: #1F6E80;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 10px 28px rgba(0,0,0,.4);
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); }
@@ -51,62 +35,96 @@
     color: var(--ink);
     font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
     line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 1040px; margin: 0 auto; padding: 40px 24px 80px; }
-  h1, h2 { font-family: "Source Serif 4", Georgia, serif; text-wrap: balance; margin: 0; }
   .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  .wrap { max-width: 1400px; margin: 0 auto; padding: 36px 24px 70px; }
 
-  .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--teal-ink); margin: 0 0 10px; }
-  h1 { font-size: clamp(32px, 5vw, 46px); font-weight: 600; letter-spacing: -0.01em; }
-  .subtitle { margin: 14px 0 0; max-width: 62ch; color: var(--ink-2); font-size: 16px; }
-  .meta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  h1, h2 { margin: 0; text-wrap: balance; }
+  .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--accent-ink); margin: 0 0 10px; }
+  h1 { font-size: clamp(28px, 4vw, 38px); font-weight: 700; letter-spacing: -0.01em; }
+  .subtitle { margin: 12px 0 0; max-width: 68ch; color: var(--ink-2); font-size: 15.5px; }
+
+  .meta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
   .pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); font-size: 13px; color: var(--ink-2); box-shadow: var(--shadow); }
   .pill b { color: var(--ink); font-weight: 600; }
-  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); flex: none; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
 
-  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 36px 0 0; border-bottom: 1px solid var(--border); }
-  .tab {
-    appearance: none; border: none; background: none; font: inherit; font-size: 14.5px; font-weight: 500;
-    color: var(--ink-2); padding: 11px 4px; margin-right: 22px; cursor: pointer;
-    border-bottom: 2px solid transparent; transform: translateY(1px);
+  section.block { margin-top: 44px; }
+  .block-head { margin-bottom: 16px; }
+  .block-head h2 { font-size: 19px; font-weight: 700; }
+  .block-head p.hint { margin: 4px 0 0; color: var(--ink-2); font-size: 13.5px; max-width: 70ch; }
+
+  .board { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(560px, 100%), 1fr)); gap: 18px; align-items: start; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: var(--shadow); overflow: hidden;
   }
-  .tab:hover { color: var(--ink); }
-  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--teal); font-weight: 600; }
-  .tab:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
-
-  section.block { margin-top: 40px; }
-  .block-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
-  .block-head h2 { font-size: 23px; font-weight: 600; }
-  .block-head p.hint { margin: 4px 0 0; color: var(--ink-2); font-size: 14px; max-width: 56ch; }
-
-  .controls { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 18px; }
-  .seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 8px; overflow: hidden; background: var(--surface); }
-  .seg button { appearance: none; border: none; background: none; font: inherit; font-size: 13.5px; font-weight: 500; color: var(--ink-2); padding: 8px 14px; cursor: pointer; }
-  .seg button + button { border-left: 1px solid var(--border-strong); }
-  .seg button[aria-pressed="true"] { background: var(--teal); color: #fff; }
-
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); padding: 22px; }
+  .card-head {
+    padding: 13px 16px; border-bottom: 1px solid var(--border);
+    font-weight: 600; font-size: 14.5px; color: var(--ink);
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .card-head .n { font-size: 11px; font-weight: 500; color: var(--ink-3); }
   .scroll-x { overflow-x: auto; }
 
-  table.plain { border-collapse: collapse; width: 100%; font-size: 13px; }
-  table.plain th, table.plain td { padding: 8px 12px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
-  table.plain th:first-child, table.plain td:first-child { text-align: left; }
-  table.plain thead th { font-family: "IBM Plex Sans", sans-serif; font-weight: 600; font-size: 11.5px; color: var(--ink-2); text-transform: uppercase; letter-spacing: .04em; position: sticky; top: 0; background: var(--surface); }
-  table.plain tbody td { font-family: "IBM Plex Mono", monospace; color: var(--ink); }
-  table.plain tbody tr:hover { background: var(--surface-2); }
-  .table-scroll { max-height: 420px; overflow-y: auto; margin-top: 18px; border-top: 1px solid var(--border); }
+  table.grid { border-collapse: separate; border-spacing: 0; width: 100%; }
+  table.grid th, table.grid td { white-space: nowrap; }
+  table.grid thead th {
+    font-family: "IBM Plex Mono", monospace; font-size: 11.5px; font-weight: 600;
+    color: var(--ink-2); padding: 8px 6px; text-align: center;
+    border-bottom: 1px solid var(--border-strong);
+    position: sticky; top: 0; background: var(--surface); z-index: 1;
+  }
+  table.grid thead th.corner {
+    text-align: left; color: var(--ink-3); font-family: "IBM Plex Sans", sans-serif; font-weight: 600;
+    position: sticky; left: 0; z-index: 2; background: var(--surface);
+    padding-left: 14px;
+  }
+  table.grid tbody th {
+    font-family: "IBM Plex Mono", monospace; font-size: 12px; font-weight: 600; color: var(--ink);
+    text-align: right; padding: 0 10px 0 14px; white-space: nowrap;
+    position: sticky; left: 0; background: var(--surface); border-right: 1px solid var(--border-strong);
+    height: 46px;
+  }
+  table.grid tbody th.irregular { border-top: 2px dashed var(--flag); color: var(--flag); }
+  table.grid tbody th .flag-mark { color: var(--flag); font-weight: 700; margin-left: 2px; }
+  table.grid td {
+    padding: 0; height: 46px; width: 60px; border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+  table.grid td .cell {
+    height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1px; padding: 3px 2px;
+  }
+  table.grid td .presta { font-family: "IBM Plex Mono", monospace; font-size: 12.5px; font-weight: 700; color: var(--ink); }
+  table.grid td .tan { font-family: "IBM Plex Mono", monospace; font-size: 10px; font-weight: 500; color: var(--ink-2); }
+  table.grid td.empty { background: repeating-linear-gradient(135deg, var(--surface-2) 0 6px, var(--surface) 6px 12px); }
+  table.grid tr.irregular td { border-top: 2px dashed var(--flag); }
 
-  .chart-host { width: 100%; height: 420px; }
+  table.grid td.delta .presta.up { color: var(--bad); }
+  table.grid td.delta .presta.down { color: var(--good); }
+  table.grid td.delta .tan.up { color: var(--bad); }
+  table.grid td.delta .tan.down { color: var(--good); }
+  table.grid td.delta .presta.flat, table.grid td.delta .tan.flat { color: var(--ink-3); }
 
-  .note { margin-top: 14px; font-size: 13px; color: var(--ink-2); background: var(--surface-2); border-radius: 9px; padding: 10px 14px; }
-  .error { margin-top: 14px; font-size: 13.5px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 9px; padding: 14px 16px; }
-  .error code { font-family: "IBM Plex Mono", monospace; background: var(--surface); padding: 1px 5px; border-radius: 4px; }
+  .note {
+    font-size: 13.5px; color: var(--ink-2); background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px 20px; box-shadow: var(--shadow);
+  }
+  .error { font-size: 13.5px; color: var(--ink); background: var(--surface); border: 1px solid var(--bad); border-radius: 12px; padding: 16px 18px; }
+  .error code { font-family: "IBM Plex Mono", monospace; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
 
-  footer { margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--ink-3); display: flex; flex-direction: column; gap: 6px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 10px; font-size: 12.5px; color: var(--ink-2); }
+  .legend .item { display: flex; align-items: center; gap: 7px; }
+  .legend .swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+
+  footer { margin-top: 54px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--ink-3); display: flex; flex-direction: column; gap: 6px; }
+  footer .flag-mark { color: var(--flag); font-weight: 700; }
 
   @media (max-width: 620px) {
-    .wrap { padding: 28px 16px 60px; }
-    .chart-host { height: 320px; }
+    .wrap { padding: 24px 14px 50px; }
   }
 </style>
 </head>
@@ -116,70 +134,61 @@
   <header>
     <p class="eyebrow">Dados públicos · crédito pessoal</p>
     <h1>COF</h1>
-    <p class="subtitle">TAN, TAEG, MTIC e prestação mensal de um simulador de crédito pessoal português, por finalidade, montante e prazo.</p>
+    <p class="subtitle">TAN e prestação mensal de um simulador de crédito pessoal português, por montante (linhas) e prazo (colunas), para cada finalidade. Estrutura de quadro igual em todas as finalidades — células vazias são combinações sem oferta.</p>
     <div class="meta-row" id="metaRow">
       <span class="pill"><span class="dot"></span>A carregar…</span>
     </div>
   </header>
 
-  <nav class="tabs" id="finTabs" role="tablist" aria-label="Finalidade do crédito" hidden></nav>
-
   <div id="app" hidden>
-    <section class="block">
+    <section class="block" id="secAtual">
       <div class="block-head">
-        <div>
-          <h2 id="secTitle">Preçário</h2>
-          <p class="hint">Prazo no eixo horizontal, montante no eixo vertical. A cor da célula é a taxa escolhida.</p>
-        </div>
+        <h2>Preçário atual</h2>
+        <p class="hint">Em cada célula: prestação mensal (em destaque) e TAN (por baixo, mais pequeno).</p>
       </div>
-      <div class="controls">
-        <div class="seg" id="metricSeg" role="group" aria-label="Métrica do gráfico">
-          <button data-metric="tan" aria-pressed="true">TAN</button>
-          <button data-metric="taeg" aria-pressed="false">TAEG</button>
-        </div>
+      <div class="board" id="boardAtual"></div>
+    </section>
+
+    <section class="block" id="secDelta">
+      <div class="block-head">
+        <h2>Alterações face à semana anterior</h2>
+        <p class="hint">Diferença de TAN (pontos percentuais) e de prestação (€) entre a recolha atual e a anterior.</p>
       </div>
-      <div class="card">
-        <div id="chart" class="chart-host"></div>
-        <div class="table-scroll scroll-x">
-          <table class="plain" id="dataTable"></table>
-        </div>
+      <div id="boardDelta"></div>
+    </section>
+
+    <section class="block" id="secAnterior">
+      <div class="block-head">
+        <h2>Preçário anterior</h2>
+        <p class="hint" id="hintAnterior"></p>
       </div>
+      <div id="boardAnterior"></div>
     </section>
   </div>
 
   <div id="errorHost"></div>
 
-  <footer>
-    <span>TAN — Taxa Anual Nominal · TAEG — Taxa Anual Efetiva Global · MTIC — Montante Total Imputado ao Consumidor. Prestação sem seguro.</span>
-    <span>Valores lidos diretamente do simulador público de um prestador de crédito, sem qualquer cálculo próprio. Sujeitos a análise de risco individual — não constituem uma proposta de crédito.</span>
+  <footer id="footer" hidden>
+    <span><span class="flag-mark">▨</span> montante mínimo real da finalidade, abaixo do escalão padrão de 5.000 € (não é um valor redondo).</span>
+    <span>TAN — Taxa Anual Nominal. Prestação sem seguro. Valores lidos diretamente do simulador público de um prestador de crédito, sem qualquer cálculo próprio.</span>
+    <span>Sujeitos a análise de risco individual — não constituem uma proposta de crédito.</span>
   </footer>
 
 </div>
 
 <script>
 (function () {
+  const STEP_MONTANTE = 5000;
+
   const fmtPct = v => v.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+  const fmtPP = v => (v > 0 ? '+' : '') + v.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + 'pp';
   const fmtEur0 = v => v.toLocaleString('pt-PT', { maximumFractionDigits: 0 }) + ' €';
   const fmtEur2 = v => v.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  const fmtEurDelta = v => (v > 0 ? '+' : '') + v.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
   const fmtDate = d => new Date(d + 'T00:00:00').toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' });
 
-  function hexToRgb(h) {
-    const n = parseInt(h.replace('#', ''), 16);
-    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-  }
-  function textColorFor(value, min, max, loHex, hiHex, darkInk, lightInk) {
-    const lo = hexToRgb(loHex), hi = hexToRgb(hiHex);
-    const t = max > min ? (value - min) / (max - min) : 0.5;
-    const rgb = [0, 1, 2].map(i => lo[i] + (hi[i] - lo[i]) * t);
-    const lum = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
-    return lum > 0.5 ? darkInk : lightInk;
-  }
-
   function showError(title, detail) {
-    document.getElementById('errorHost').innerHTML = `
-      <div class="error">
-        <strong>${title}</strong><br>${detail}
-      </div>`;
+    document.getElementById('errorHost').innerHTML = `<div class="error"><strong>${title}</strong><br>${detail}</div>`;
   }
 
   function parseCsv(text) {
@@ -190,171 +199,119 @@
       const row = {};
       headers.forEach((h, i) => row[h] = cols[i]);
       return {
-        d: row.data_recolha,
-        f: row.finalidade,
-        m: parseFloat(row.montante_eur),
-        p: parseInt(row.prazo_meses, 10),
-        presta: parseFloat(row.prestacao_mensal_eur),
-        taeg: parseFloat(row.taeg_pct),
-        tan: parseFloat(row.tan_pct),
-        mtic: parseFloat(row.mtic_eur),
+        d: row.data_recolha, f: row.finalidade,
+        m: parseFloat(row.montante_eur), p: parseInt(row.prazo_meses, 10),
+        presta: parseFloat(row.prestacao_mensal_eur), tan: parseFloat(row.tan_pct),
       };
     });
   }
 
   fetch('./cof_historico.csv', { cache: 'no-store' })
-    .then(res => {
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return res.text();
-    })
+    .then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.text(); })
     .then(text => init(parseCsv(text)))
-    .catch(err => {
-      showError(
-        'Não foi possível carregar cof_historico.csv.',
-        `Esta página lê <code>cof_historico.csv</code> da mesma pasta onde está alojada — isso só funciona quando servida por http(s)
-         (ex.: GitHub Pages), não ao abrir o ficheiro diretamente no browser (<code>file://</code> bloqueia esse pedido).
-         Detalhe técnico: ${err.message}`
-      );
-    });
+    .catch(err => showError(
+      'Não foi possível carregar cof_historico.csv.',
+      `Esta página lê <code>cof_historico.csv</code> da mesma pasta onde está alojada — só funciona servida por http(s)
+       (ex.: GitHub Pages), não ao abrir o ficheiro diretamente (<code>file://</code> bloqueia esse pedido).
+       Detalhe técnico: ${err.message}`
+    ));
 
   function init(DATA) {
     const order = ['Pagar Despesas / Férias e Lazer', 'Lar e Recheio', 'Formação', 'Eficiência Energética'];
     const finalidades = [...new Set(DATA.map(r => r.f))].sort((a, b) => order.indexOf(a) - order.indexOf(b));
     const dates = [...new Set(DATA.map(r => r.d))].sort();
     const latestDate = dates[dates.length - 1];
-    const latestRows = DATA.filter(r => r.d === latestDate);
+    const previousDate = dates.length >= 2 ? dates[dates.length - 2] : null;
 
+    const allPrazos = [...new Set(DATA.map(r => r.p))].sort((a, b) => a - b);
+    const allMontantes = [...new Set(DATA.map(r => r.m))].sort((a, b) => a - b);
+    const irregulares = new Set(allMontantes.filter(m => Math.round(m) % STEP_MONTANTE !== 0));
+
+    const latestRows = DATA.filter(r => r.d === latestDate);
     document.getElementById('metaRow').innerHTML = `
       <span class="pill"><span class="dot"></span>Última recolha: <b>${fmtDate(latestDate)}</b></span>
-      <span class="pill">${latestRows.length} combinações analisadas</span>
+      <span class="pill">${latestRows.length} combinações · ${finalidades.length} finalidades</span>
+      ${previousDate ? `<span class="pill">Recolha anterior: <b>${fmtDate(previousDate)}</b></span>` : ''}
     `;
-    document.getElementById('finTabs').hidden = false;
     document.getElementById('app').hidden = false;
+    document.getElementById('footer').hidden = false;
 
-    const ranges = {};
-    ['tan', 'taeg'].forEach(m => {
-      const vals = latestRows.map(r => r[m]);
-      ranges[m] = { min: Math.min(...vals), max: Math.max(...vals) };
-    });
+    function rangeFor(fin) {
+      // por finalidade, so mostramos as colunas/linhas onde ELA TEM dados
+      // em pelo menos uma data - mas a MESMA grelha universal (allPrazos/
+      // allMontantes) e usada como moldura para todas, para o quadro ficar
+      // com a mesma estrutura em todas as finalidades.
+      return { prazos: allPrazos, montantes: allMontantes };
+    }
 
-    const state = { fin: finalidades[0], metric: 'tan' };
-    const chart = echarts.init(document.getElementById('chart'));
-    window.addEventListener('resize', () => chart.resize());
+    function buildIndex(rows) {
+      const idx = {};
+      rows.forEach(r => idx[r.f + '|' + r.m + '|' + r.p] = r);
+      return idx;
+    }
 
-    function styleVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+    function tableHtml(fin, cellRenderer) {
+      const { prazos, montantes } = rangeFor(fin);
+      let html = '<div class="scroll-x"><table class="grid"><thead><tr><th class="corner">montante \\ prazo</th>';
+      prazos.forEach(p => html += `<th>${p}m</th>`);
+      html += '</tr></thead><tbody>';
+      montantes.forEach(m => {
+        const irregular = irregulares.has(m);
+        html += `<tr class="${irregular ? 'irregular' : ''}"><th class="${irregular ? 'irregular' : ''}">${fmtEur0(m)}${irregular ? '<span class="flag-mark">▨</span>' : ''}</th>`;
+        prazos.forEach(p => { html += cellRenderer(fin, m, p); });
+        html += '</tr>';
+      });
+      html += '</tbody></table></div>';
+      return html;
+    }
 
-    function renderTabs() {
-      const nav = document.getElementById('finTabs');
-      nav.innerHTML = '';
+    function renderBoard(hostId, rows, kind, compareRows) {
+      const idx = buildIndex(rows);
+      const prevIdx = compareRows ? buildIndex(compareRows) : null;
+      let html = '<div class="board">';
       finalidades.forEach(fin => {
-        const btn = document.createElement('button');
-        btn.className = 'tab';
-        btn.textContent = fin;
-        btn.setAttribute('role', 'tab');
-        btn.setAttribute('aria-selected', fin === state.fin ? 'true' : 'false');
-        btn.addEventListener('click', () => { state.fin = fin; renderTabs(); renderAll(); });
-        nav.appendChild(btn);
-      });
-    }
-
-    function gridFor(fin) {
-      const rows = latestRows.filter(r => r.f === fin);
-      const montantes = [...new Set(rows.map(r => r.m))].sort((a, b) => a - b);
-      const prazos = [...new Set(rows.map(r => r.p))].sort((a, b) => a - b);
-      const byKey = {};
-      rows.forEach(r => byKey[r.m + '_' + r.p] = r);
-      return { rows, montantes, prazos, byKey };
-    }
-
-    function renderChart() {
-      const { montantes, prazos, byKey } = gridFor(state.fin);
-      const { min, max } = ranges[state.metric];
-      const ink2 = styleVar('--ink-2'), border = styleVar('--border'), surface = styleVar('--surface'), ink = styleVar('--ink');
-      const seqLo = styleVar('--seq-lo'), seqHi = styleVar('--seq-hi');
-
-      const cells = [];
-      montantes.forEach((m, yi) => {
-        prazos.forEach((p, xi) => {
-          const row = byKey[m + '_' + p];
-          if (row) {
-            const val = Number(row[state.metric].toFixed(2));
-            cells.push({
-              value: [xi, yi, val],
-              label: { color: textColorFor(val, min, max, seqLo, seqHi, ink, '#fff') },
-            });
+        html += `<div class="card"><div class="card-head">${fin}</div>`;
+        html += tableHtml(fin, (f, m, p) => {
+          const row = idx[f + '|' + m + '|' + p];
+          if (kind === 'delta') {
+            const prevRow = prevIdx[f + '|' + m + '|' + p];
+            if (!row || !prevRow) return '<td class="empty"></td>';
+            const dTan = row.tan - prevRow.tan;
+            const dPresta = row.presta - prevRow.presta;
+            const clsTan = Math.abs(dTan) < 0.005 ? 'flat' : (dTan > 0 ? 'up' : 'down');
+            const clsPresta = Math.abs(dPresta) < 0.005 ? 'flat' : (dPresta > 0 ? 'up' : 'down');
+            return `<td class="delta"><div class="cell">
+                <div class="presta ${clsPresta}">${Math.abs(dPresta) < 0.005 ? '=' : fmtEurDelta(dPresta)}</div>
+                <div class="tan ${clsTan}">${Math.abs(dTan) < 0.005 ? '=' : fmtPP(dTan)}</div>
+              </div></td>`;
           }
+          if (!row) return '<td class="empty"></td>';
+          return `<td><div class="cell">
+              <div class="presta">${fmtEur2(row.presta)}</div>
+              <div class="tan">${fmtPct(row.tan)}</div>
+            </div></td>`;
         });
+        html += '</div>';
       });
-
-      chart.setOption({
-        grid: { left: 90, right: 24, top: 54, bottom: 40, containLabel: false },
-        xAxis: {
-          type: 'category', data: prazos.map(p => p + 'm'),
-          name: 'Prazo', nameLocation: 'middle', nameGap: 30,
-          axisLine: { lineStyle: { color: border } }, axisLabel: { color: ink2, fontFamily: 'IBM Plex Mono' },
-          nameTextStyle: { color: ink2, fontFamily: 'IBM Plex Sans', fontWeight: 600 },
-          splitArea: { show: true, areaStyle: { color: [surface, surface] } },
-        },
-        yAxis: {
-          type: 'category', data: montantes.map(m => fmtEur0(m)),
-          name: 'Montante', nameLocation: 'middle', nameGap: 74,
-          axisLine: { lineStyle: { color: border } }, axisLabel: { color: ink2, fontFamily: 'IBM Plex Mono' },
-          nameTextStyle: { color: ink2, fontFamily: 'IBM Plex Sans', fontWeight: 600 },
-          splitArea: { show: true, areaStyle: { color: [surface, surface] } },
-        },
-        visualMap: {
-          min, max, calculable: false, orient: 'horizontal', right: 24, top: 4,
-          inRange: { color: [seqLo, seqHi] },
-          textStyle: { color: ink2, fontFamily: 'IBM Plex Mono' },
-          formatter: v => v.toFixed(1) + '%',
-        },
-        tooltip: {
-          backgroundColor: ink, borderWidth: 0, textStyle: { color: styleVar('--bg'), fontFamily: 'IBM Plex Sans' },
-          formatter: p => {
-            const m = montantes[p.value[1]], pr = prazos[p.value[0]];
-            const row = byKey[m + '_' + pr];
-            return `<b>${fmtEur0(m)} · ${pr} meses</b><br>
-              TAN ${fmtPct(row.tan)} &nbsp; TAEG ${fmtPct(row.taeg)}<br>
-              Prestação ${fmtEur2(row.presta)}/mês<br>MTIC ${fmtEur2(row.mtic)}`;
-          },
-        },
-        series: [{
-          type: 'heatmap', data: cells, label: {
-            show: true, fontFamily: 'IBM Plex Mono', fontSize: 11,
-            formatter: p => p.value[2].toFixed(1),
-          },
-          itemStyle: { borderColor: surface, borderWidth: 3, borderRadius: 6 },
-          emphasis: { itemStyle: { borderColor: ink, borderWidth: 2 } },
-        }],
-      }, true);
+      html += '</div>';
+      document.getElementById(hostId).innerHTML = html;
     }
 
-    function renderTable() {
-      const rows = latestRows.filter(r => r.f === state.fin).slice().sort((a, b) => a.m - b.m || a.p - b.p);
-      let html = '<thead><tr><th>Montante</th><th>Prazo</th><th>TAN</th><th>TAEG</th><th>Prestação</th><th>MTIC</th></tr></thead><tbody>';
-      rows.forEach(r => {
-        html += `<tr><td>${fmtEur0(r.m)}</td><td>${r.p} meses</td><td>${fmtPct(r.tan)}</td><td>${fmtPct(r.taeg)}</td><td>${fmtEur2(r.presta)}</td><td>${fmtEur2(r.mtic)}</td></tr>`;
-      });
-      html += '</tbody>';
-      document.getElementById('dataTable').innerHTML = html;
+    // Preçário atual
+    renderBoard('boardAtual', latestRows, 'current');
+
+    // Alterações + Preçário anterior
+    if (previousDate) {
+      const previousRows = DATA.filter(r => r.d === previousDate);
+      document.getElementById('hintAnterior').textContent = `Recolha de ${fmtDate(previousDate)}.`;
+      renderBoard('boardDelta', latestRows, 'delta', previousRows);
+      renderBoard('boardAnterior', previousRows, 'current');
+    } else {
+      const msg = `<div class="note">O histórico só tem uma recolha até agora (${fmtDate(latestDate)}). Esta secção fica disponível a partir da segunda recolha semanal (próxima terça-feira).</div>`;
+      document.getElementById('boardDelta').innerHTML = msg;
+      document.getElementById('boardAnterior').innerHTML = msg;
+      document.getElementById('hintAnterior').textContent = 'Ainda não há uma recolha anterior.';
     }
-
-    function renderAll() {
-      document.getElementById('secTitle').textContent = 'Preçário — ' + state.fin;
-      renderChart();
-      renderTable();
-    }
-
-    document.getElementById('metricSeg').addEventListener('click', e => {
-      const btn = e.target.closest('button[data-metric]');
-      if (!btn) return;
-      state.metric = btn.dataset.metric;
-      [...e.currentTarget.children].forEach(b => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
-      renderChart();
-    });
-
-    renderTabs();
-    renderAll();
   }
 })();
 </script>

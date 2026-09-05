@@ -60,8 +60,10 @@ privado separado.
 - `crawler-cred/cof.json` - a mesma recolha em bruto (JSON completo)
 - `crawler-cred/cof_historico.csv` - histórico cumulativo (uma linha por
   combinação por dia de recolha)
-- `crawler-cred/cof-dash.html` - painel visual (gráficos + tabelas, por
-  finalidade), lê `cof_historico.csv` diretamente ao carregar a página
+- `crawler-cred/cof-dash.html` - painel visual (tabelas de TAN e
+  prestação mensal por montante/prazo, uma por finalidade, lado a lado,
+  com preçário atual, alterações face à semana anterior e preçário
+  anterior), lê `cof_historico.csv` diretamente ao carregar a página
   (não tem dados embutidos - fica sempre atualizado sozinho). Só
   funciona servido por http(s) (ex.: GitHub Pages); aberto como ficheiro
   local (`file://`) o browser bloqueia esse pedido e a página mostra um
