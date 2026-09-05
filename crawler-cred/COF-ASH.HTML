@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>COF</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #F4F7F6;
+    --surface: #FFFFFF;
+    --surface-2: #E9F0EF;
+    --ink: #142A30;
+    --ink-2: #4E6870;
+    --ink-3: #7C939A;
+    --border: #D7E1DF;
+    --border-strong: #BCCBC9;
+    --teal: #008A9E;
+    --teal-ink: #05616F;
+    --ochre: #C1741F;
+    --seq-lo: #E3F3F4;
+    --seq-hi: #063F49;
+    --shadow: 0 1px 2px rgba(20,42,48,.06), 0 6px 20px rgba(20,42,48,.07);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0D1719; --surface: #14262A; --surface-2: #1B2E32;
+      --ink: #EAF3F4; --ink-2: #9FB8BD; --ink-3: #6C868C;
+      --border: #24393D; --border-strong: #345054;
+      --teal: #23AFCB; --teal-ink: #7FD8EA; --ochre: #E0A050;
+      --seq-lo: #173238; --seq-hi: #6BE7F5;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0D1719; --surface: #14262A; --surface-2: #1B2E32;
+    --ink: #EAF3F4; --ink-2: #9FB8BD; --ink-3: #6C868C;
+    --border: #24393D; --border-strong: #345054;
+    --teal: #23AFCB; --teal-ink: #7FD8EA; --ochre: #E0A050;
+    --seq-lo: #173238; --seq-hi: #6BE7F5;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); }
+  body {
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1, h2 { font-family: "Source Serif 4", Georgia, serif; text-wrap: balance; margin: 0; }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+
+  .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--teal-ink); margin: 0 0 10px; }
+  h1 { font-size: clamp(32px, 5vw, 46px); font-weight: 600; letter-spacing: -0.01em; }
+  .subtitle { margin: 14px 0 0; max-width: 62ch; color: var(--ink-2); font-size: 16px; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+  .pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); font-size: 13px; color: var(--ink-2); box-shadow: var(--shadow); }
+  .pill b { color: var(--ink); font-weight: 600; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); flex: none; }
+
+  .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 36px 0 0; border-bottom: 1px solid var(--border); }
+  .tab {
+    appearance: none; border: none; background: none; font: inherit; font-size: 14.5px; font-weight: 500;
+    color: var(--ink-2); padding: 11px 4px; margin-right: 22px; cursor: pointer;
+    border-bottom: 2px solid transparent; transform: translateY(1px);
+  }
+  .tab:hover { color: var(--ink); }
+  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--teal); font-weight: 600; }
+  .tab:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+
+  section.block { margin-top: 40px; }
+  .block-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+  .block-head h2 { font-size: 23px; font-weight: 600; }
+  .block-head p.hint { margin: 4px 0 0; color: var(--ink-2); font-size: 14px; max-width: 56ch; }
+
+  .controls { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 18px; }
+  .seg { display: inline-flex; border: 1px solid var(--border-strong); border-radius: 8px; overflow: hidden; background: var(--surface); }
+  .seg button { appearance: none; border: none; background: none; font: inherit; font-size: 13.5px; font-weight: 500; color: var(--ink-2); padding: 8px 14px; cursor: pointer; }
+  .seg button + button { border-left: 1px solid var(--border-strong); }
+  .seg button[aria-pressed="true"] { background: var(--teal); color: #fff; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); padding: 22px; }
+  .scroll-x { overflow-x: auto; }
+
+  table.plain { border-collapse: collapse; width: 100%; font-size: 13px; }
+  table.plain th, table.plain td { padding: 8px 12px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  table.plain th:first-child, table.plain td:first-child { text-align: left; }
+  table.plain thead th { font-family: "IBM Plex Sans", sans-serif; font-weight: 600; font-size: 11.5px; color: var(--ink-2); text-transform: uppercase; letter-spacing: .04em; position: sticky; top: 0; background: var(--surface); }
+  table.plain tbody td { font-family: "IBM Plex Mono", monospace; color: var(--ink); }
+  table.plain tbody tr:hover { background: var(--surface-2); }
+  .table-scroll { max-height: 420px; overflow-y: auto; margin-top: 18px; border-top: 1px solid var(--border); }
+
+  .chart-host { width: 100%; height: 420px; }
+
+  .note { margin-top: 14px; font-size: 13px; color: var(--ink-2); background: var(--surface-2); border-radius: 9px; padding: 10px 14px; }
+  .error { margin-top: 14px; font-size: 13.5px; color: var(--ink); background: var(--surface-2); border: 1px solid var(--border-strong); border-radius: 9px; padding: 14px 16px; }
+  .error code { font-family: "IBM Plex Mono", monospace; background: var(--surface); padding: 1px 5px; border-radius: 4px; }
+
+  footer { margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--border); font-size: 12.5px; color: var(--ink-3); display: flex; flex-direction: column; gap: 6px; }
+
+  @media (max-width: 620px) {
+    .wrap { padding: 28px 16px 60px; }
+    .chart-host { height: 320px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Dados públicos · crédito pessoal</p>
+    <h1>COF</h1>
+    <p class="subtitle">TAN, TAEG, MTIC e prestação mensal de um simulador de crédito pessoal português, por finalidade, montante e prazo.</p>
+    <div class="meta-row" id="metaRow">
+      <span class="pill"><span class="dot"></span>A carregar…</span>
+    </div>
+  </header>
+
+  <nav class="tabs" id="finTabs" role="tablist" aria-label="Finalidade do crédito" hidden></nav>
+
+  <div id="app" hidden>
+    <section class="block">
+      <div class="block-head">
+        <div>
+          <h2 id="secTitle">Preçário</h2>
+          <p class="hint">Prazo no eixo horizontal, montante no eixo vertical. A cor da célula é a taxa escolhida.</p>
+        </div>
+      </div>
+      <div class="controls">
+        <div class="seg" id="metricSeg" role="group" aria-label="Métrica do gráfico">
+          <button data-metric="tan" aria-pressed="true">TAN</button>
+          <button data-metric="taeg" aria-pressed="false">TAEG</button>
+        </div>
+      </div>
+      <div class="card">
+        <div id="chart" class="chart-host"></div>
+        <div class="table-scroll scroll-x">
+          <table class="plain" id="dataTable"></table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="errorHost"></div>
+
+  <footer>
+    <span>TAN — Taxa Anual Nominal · TAEG — Taxa Anual Efetiva Global · MTIC — Montante Total Imputado ao Consumidor. Prestação sem seguro.</span>
+    <span>Valores lidos diretamente do simulador público de um prestador de crédito, sem qualquer cálculo próprio. Sujeitos a análise de risco individual — não constituem uma proposta de crédito.</span>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  const fmtPct = v => v.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+  const fmtEur0 = v => v.toLocaleString('pt-PT', { maximumFractionDigits: 0 }) + ' €';
+  const fmtEur2 = v => v.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  const fmtDate = d => new Date(d + 'T00:00:00').toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  function hexToRgb(h) {
+    const n = parseInt(h.replace('#', ''), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function textColorFor(value, min, max, loHex, hiHex, darkInk, lightInk) {
+    const lo = hexToRgb(loHex), hi = hexToRgb(hiHex);
+    const t = max > min ? (value - min) / (max - min) : 0.5;
+    const rgb = [0, 1, 2].map(i => lo[i] + (hi[i] - lo[i]) * t);
+    const lum = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+    return lum > 0.5 ? darkInk : lightInk;
+  }
+
+  function showError(title, detail) {
+    document.getElementById('errorHost').innerHTML = `
+      <div class="error">
+        <strong>${title}</strong><br>${detail}
+      </div>`;
+  }
+
+  function parseCsv(text) {
+    const lines = text.trim().split(/\r?\n/);
+    const headers = lines[0].split(',');
+    return lines.slice(1).map(line => {
+      const cols = line.split(',');
+      const row = {};
+      headers.forEach((h, i) => row[h] = cols[i]);
+      return {
+        d: row.data_recolha,
+        f: row.finalidade,
+        m: parseFloat(row.montante_eur),
+        p: parseInt(row.prazo_meses, 10),
+        presta: parseFloat(row.prestacao_mensal_eur),
+        taeg: parseFloat(row.taeg_pct),
+        tan: parseFloat(row.tan_pct),
+        mtic: parseFloat(row.mtic_eur),
+      };
+    });
+  }
+
+  fetch('./cof_historico.csv', { cache: 'no-store' })
+    .then(res => {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.text();
+    })
+    .then(text => init(parseCsv(text)))
+    .catch(err => {
+      showError(
+        'Não foi possível carregar cof_historico.csv.',
+        `Esta página lê <code>cof_historico.csv</code> da mesma pasta onde está alojada — isso só funciona quando servida por http(s)
+         (ex.: GitHub Pages), não ao abrir o ficheiro diretamente no browser (<code>file://</code> bloqueia esse pedido).
+         Detalhe técnico: ${err.message}`
+      );
+    });
+
+  function init(DATA) {
+    const order = ['Pagar Despesas / Férias e Lazer', 'Lar e Recheio', 'Formação', 'Eficiência Energética'];
+    const finalidades = [...new Set(DATA.map(r => r.f))].sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    const dates = [...new Set(DATA.map(r => r.d))].sort();
+    const latestDate = dates[dates.length - 1];
+    const latestRows = DATA.filter(r => r.d === latestDate);
+
+    document.getElementById('metaRow').innerHTML = `
+      <span class="pill"><span class="dot"></span>Última recolha: <b>${fmtDate(latestDate)}</b></span>
+      <span class="pill">${latestRows.length} combinações analisadas</span>
+    `;
+    document.getElementById('finTabs').hidden = false;
+    document.getElementById('app').hidden = false;
+
+    const ranges = {};
+    ['tan', 'taeg'].forEach(m => {
+      const vals = latestRows.map(r => r[m]);
+      ranges[m] = { min: Math.min(...vals), max: Math.max(...vals) };
+    });
+
+    const state = { fin: finalidades[0], metric: 'tan' };
+    const chart = echarts.init(document.getElementById('chart'));
+    window.addEventListener('resize', () => chart.resize());
+
+    function styleVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+    function renderTabs() {
+      const nav = document.getElementById('finTabs');
+      nav.innerHTML = '';
+      finalidades.forEach(fin => {
+        const btn = document.createElement('button');
+        btn.className = 'tab';
+        btn.textContent = fin;
+        btn.setAttribute('role', 'tab');
+        btn.setAttribute('aria-selected', fin === state.fin ? 'true' : 'false');
+        btn.addEventListener('click', () => { state.fin = fin; renderTabs(); renderAll(); });
+        nav.appendChild(btn);
+      });
+    }
+
+    function gridFor(fin) {
+      const rows = latestRows.filter(r => r.f === fin);
+      const montantes = [...new Set(rows.map(r => r.m))].sort((a, b) => a - b);
+      const prazos = [...new Set(rows.map(r => r.p))].sort((a, b) => a - b);
+      const byKey = {};
+      rows.forEach(r => byKey[r.m + '_' + r.p] = r);
+      return { rows, montantes, prazos, byKey };
+    }
+
+    function renderChart() {
+      const { montantes, prazos, byKey } = gridFor(state.fin);
+      const { min, max } = ranges[state.metric];
+      const ink2 = styleVar('--ink-2'), border = styleVar('--border'), surface = styleVar('--surface'), ink = styleVar('--ink');
+      const seqLo = styleVar('--seq-lo'), seqHi = styleVar('--seq-hi');
+
+      const cells = [];
+      montantes.forEach((m, yi) => {
+        prazos.forEach((p, xi) => {
+          const row = byKey[m + '_' + p];
+          if (row) {
+            const val = Number(row[state.metric].toFixed(2));
+            cells.push({
+              value: [xi, yi, val],
+              label: { color: textColorFor(val, min, max, seqLo, seqHi, ink, '#fff') },
+            });
+          }
+        });
+      });
+
+      chart.setOption({
+        grid: { left: 90, right: 24, top: 54, bottom: 40, containLabel: false },
+        xAxis: {
+          type: 'category', data: prazos.map(p => p + 'm'),
+          name: 'Prazo', nameLocation: 'middle', nameGap: 30,
+          axisLine: { lineStyle: { color: border } }, axisLabel: { color: ink2, fontFamily: 'IBM Plex Mono' },
+          nameTextStyle: { color: ink2, fontFamily: 'IBM Plex Sans', fontWeight: 600 },
+          splitArea: { show: true, areaStyle: { color: [surface, surface] } },
+        },
+        yAxis: {
+          type: 'category', data: montantes.map(m => fmtEur0(m)),
+          name: 'Montante', nameLocation: 'middle', nameGap: 74,
+          axisLine: { lineStyle: { color: border } }, axisLabel: { color: ink2, fontFamily: 'IBM Plex Mono' },
+          nameTextStyle: { color: ink2, fontFamily: 'IBM Plex Sans', fontWeight: 600 },
+          splitArea: { show: true, areaStyle: { color: [surface, surface] } },
+        },
+        visualMap: {
+          min, max, calculable: false, orient: 'horizontal', right: 24, top: 4,
+          inRange: { color: [seqLo, seqHi] },
+          textStyle: { color: ink2, fontFamily: 'IBM Plex Mono' },
+          formatter: v => v.toFixed(1) + '%',
+        },
+        tooltip: {
+          backgroundColor: ink, borderWidth: 0, textStyle: { color: styleVar('--bg'), fontFamily: 'IBM Plex Sans' },
+          formatter: p => {
+            const m = montantes[p.value[1]], pr = prazos[p.value[0]];
+            const row = byKey[m + '_' + pr];
+            return `<b>${fmtEur0(m)} · ${pr} meses</b><br>
+              TAN ${fmtPct(row.tan)} &nbsp; TAEG ${fmtPct(row.taeg)}<br>
+              Prestação ${fmtEur2(row.presta)}/mês<br>MTIC ${fmtEur2(row.mtic)}`;
+          },
+        },
+        series: [{
+          type: 'heatmap', data: cells, label: {
+            show: true, fontFamily: 'IBM Plex Mono', fontSize: 11,
+            formatter: p => p.value[2].toFixed(1),
+          },
+          itemStyle: { borderColor: surface, borderWidth: 3, borderRadius: 6 },
+          emphasis: { itemStyle: { borderColor: ink, borderWidth: 2 } },
+        }],
+      }, true);
+    }
+
+    function renderTable() {
+      const rows = latestRows.filter(r => r.f === state.fin).slice().sort((a, b) => a.m - b.m || a.p - b.p);
+      let html = '<thead><tr><th>Montante</th><th>Prazo</th><th>TAN</th><th>TAEG</th><th>Prestação</th><th>MTIC</th></tr></thead><tbody>';
+      rows.forEach(r => {
+        html += `<tr><td>${fmtEur0(r.m)}</td><td>${r.p} meses</td><td>${fmtPct(r.tan)}</td><td>${fmtPct(r.taeg)}</td><td>${fmtEur2(r.presta)}</td><td>${fmtEur2(r.mtic)}</td></tr>`;
+      });
+      html += '</tbody>';
+      document.getElementById('dataTable').innerHTML = html;
+    }
+
+    function renderAll() {
+      document.getElementById('secTitle').textContent = 'Preçário — ' + state.fin;
+      renderChart();
+      renderTable();
+    }
+
+    document.getElementById('metricSeg').addEventListener('click', e => {
+      const btn = e.target.closest('button[data-metric]');
+      if (!btn) return;
+      state.metric = btn.dataset.metric;
+      [...e.currentTarget.children].forEach(b => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
+      renderChart();
+    });
+
+    renderTabs();
+    renderAll();
+  }
+})();
+</script>
+</body>
+</html>
