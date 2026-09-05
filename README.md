@@ -60,7 +60,7 @@ privado separado.
 - `crawler-cred/cof.json` - a mesma recolha em bruto (JSON completo)
 - `crawler-cred/cof_historico.csv` - histórico cumulativo (uma linha por
   combinação por dia de recolha)
-- `crawler-cred/COF-ASH.HTML` - painel visual (gráficos + tabelas, por
+- `crawler-cred/cof-dash.html` - painel visual (gráficos + tabelas, por
   finalidade), lê `cof_historico.csv` diretamente ao carregar a página
   (não tem dados embutidos - fica sempre atualizado sozinho). Só
   funciona servido por http(s) (ex.: GitHub Pages); aberto como ficheiro
@@ -75,12 +75,12 @@ https://raw.githubusercontent.com/dblxpt/data-published/main/crawler-cred/cof.js
 https://raw.githubusercontent.com/dblxpt/data-published/main/crawler-cred/cof_historico.csv
 ```
 
-Para ver `COF-ASH.HTML` como página (não como texto em bruto), ativar o
+Para ver `cof-dash.html` como página (não como texto em bruto), ativar o
 GitHub Pages neste repositório (Settings → Pages → Deploy from branch →
 `main` → `/ (root)`) e abrir:
 
 ```
-https://dblxpt.github.io/data-published/crawler-cred/COF-ASH.HTML
+https://dblxpt.github.io/data-published/crawler-cred/cof-dash.html
 ```
 
 ## Nota
