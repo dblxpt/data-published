@@ -17,8 +17,15 @@
     --border-strong: #BCCBC9;
     --ink: #142A30;
     --ink-2: #4E6870;
-    --ink-3: #7C939A;
+    /* Escurecido face ao tom original (#7C939A): esse dava só 3,0:1 contra
+       --bg e 3,2:1 contra --surface - abaixo do mínimo AA de 4,5:1 para
+       texto normal. Este valor dá 4,9:1 / 5,3:1 (confirmado por fórmula
+       WCAG, não a olho) e continua visualmente "secundário" face a --ink-2. */
+    --ink-3: #5D6E73;
     --accent: #008A9E;
+    /* Só para o fundo do botão de finalidade pressionado - o --accent puro
+       com texto branco por cima dava 4,09:1 (abaixo do mínimo AA de 4,5:1). */
+    --accent-pressed: #007C8E;
     --accent-ink: #05616F;
     --on-accent: #FFFFFF;
     --good: #197A44;
@@ -47,11 +54,11 @@
     flex: 1 1 220px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
     box-shadow: var(--shadow); padding: 16px 18px;
   }
-  .compare-label { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); }
+  .compare-label { margin: 0; font-size: 12.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); }
   .compare-combo { margin: 2px 0 0; font-size: 12.5px; color: var(--ink-2); }
-  .compare-tan { margin: 10px 0 0; font-family: "IBM Plex Mono", monospace; font-size: 30px; font-weight: 700; line-height: 1; }
+  .compare-tan { margin: 10px 0 0; font-family: "IBM Plex Mono", monospace; font-size: 23px; font-weight: 700; line-height: 1; }
   .compare-presta { margin: 6px 0 0; font-family: "IBM Plex Mono", monospace; font-size: 14px; color: var(--ink-2); }
-  .compare-since { margin: 10px 0 0; font-size: 12px; color: var(--ink-3); }
+  .compare-since { margin: 10px 0 0; font-size: 12.5px; color: var(--ink-3); }
 
   .meta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
   .pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); font-size: 13px; color: var(--ink-2); box-shadow: var(--shadow); }
@@ -79,7 +86,7 @@
     background: var(--surface); color: var(--ink-2);
   }
   .fin-btn:hover { color: var(--ink); border-color: var(--ink-3); }
-  .fin-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .fin-btn[aria-pressed="true"] { background: var(--accent-pressed); border-color: var(--accent-pressed); color: var(--on-accent); }
   .fin-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   section.block { margin-top: 44px; }
@@ -129,7 +136,7 @@
     gap: 1px; padding: 3px 2px; cursor: default;
   }
   table.grid td .tan { font-family: "IBM Plex Mono", monospace; font-size: 14px; font-weight: 700; color: var(--accent-ink); }
-  table.grid td .presta { font-family: "IBM Plex Mono", monospace; font-size: 10px; font-weight: 500; color: var(--ink-2); }
+  table.grid td .presta { font-family: "IBM Plex Mono", monospace; font-size: 11px; font-weight: 500; color: var(--ink-2); }
   table.grid td.empty { background: repeating-linear-gradient(135deg, var(--surface-2) 0 6px, var(--surface) 6px 12px); }
   table.grid tr.irregular td { border-top: 2px dashed var(--flag); }
   table.grid td:not(.empty):not(.delta):hover { outline: 2px solid var(--accent); outline-offset: -2px; z-index: 1; position: relative; }
@@ -171,7 +178,7 @@
     table.grid tbody th { font-size: 10.5px; padding: 0 6px 0 8px; }
     table.grid td { width: 46px; height: 40px; }
     table.grid td .tan { font-size: 12px; }
-    table.grid td .presta { font-size: 9px; }
+    table.grid td .presta { font-size: 10px; }
   }
 </style>
 </head>
@@ -280,33 +287,66 @@
     document.getElementById('errorHost').innerHTML = `<div class="error"><strong>${title}</strong><br>${detail}</div>`;
   }
 
-  // Degrade de cor do TAN por magnitude (mais escuro = TAN mais alto),
-  // para se ver visualmente qual e mais caro/barato numa tabela sem ter
-  // de ler os numeros um a um. Um so matiz (teal, a familia da marca),
-  // do mais claro ao quase-preto - nunca aplicado ao fundo da celula
-  // (so ao texto do TAN), por isso todos os passos ficam sempre bem
-  // legiveis sobre o fundo branco do cartao (contraste minimo 5:1,
-  // confirmado manualmente contra a formula WCAG antes de publicar).
-  // Domino (min/max) passado pelo chamador, calculado a partir dos
-  // valores REALMENTE presentes na tabela/comparacao em causa - nao uma
-  // escala global fixa. Um intervalo global (ex.: 6%-14% em todo o
-  // dataset) tornava o degrade praticamente impercetivel em finalidades
-  // cujo TAN real varia pouco (ex.: 9,5%-10,25%) - calibrar ao que esta
-  // mesmo a ser mostrado da mais contraste util, ao custo de o mesmo TAN
-  // poder sair com cores diferentes noutra tabela.
-  const TAN_RAMP = ['#0A7A8C', '#066B7B', '#05616F', '#0C4A54', '#142A30'];
+  // Degrade de cor do TAN por magnitude, para se ver visualmente qual e
+  // mais caro/barato numa tabela sem ter de ler os numeros um a um.
+  // Dominio (min/max) sempre calculado a partir dos valores REALMENTE
+  // presentes na tabela/comparacao em causa - nao uma escala global fixa
+  // (um intervalo global, ex.: 6%-14% em todo o dataset, tornava o
+  // degrade impercetivel em finalidades cujo TAN real varia pouco).
   function _hexToRgb(hex) {
     const n = parseInt(hex.slice(1), 16);
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
   }
-  function colorForTan(tan, tanMin, tanMax) {
-    const t = tanMax > tanMin ? Math.max(0, Math.min(1, (tan - tanMin) / (tanMax - tanMin))) : 0.5;
-    const pos = t * (TAN_RAMP.length - 1);
-    const i0 = Math.floor(pos), i1 = Math.min(TAN_RAMP.length - 1, i0 + 1);
+  function _lerpRamp(ramp, t) {
+    const pos = t * (ramp.length - 1);
+    const i0 = Math.floor(pos), i1 = Math.min(ramp.length - 1, i0 + 1);
     const frac = pos - i0;
-    const c0 = _hexToRgb(TAN_RAMP[i0]), c1 = _hexToRgb(TAN_RAMP[i1]);
-    const mixed = c0.map((v, idx) => Math.round(v + (c1[idx] - v) * frac));
-    return `rgb(${mixed[0]}, ${mixed[1]}, ${mixed[2]})`;
+    const c0 = _hexToRgb(ramp[i0]), c1 = _hexToRgb(ramp[i1]);
+    return c0.map((v, idx) => Math.round(v + (c1[idx] - v) * frac));
+  }
+  function _tanFrac(tan, tanMin, tanMax) {
+    return tanMax > tanMin ? Math.max(0, Math.min(1, (tan - tanMin) / (tanMax - tanMin))) : 0.5;
+  }
+  // Contraste WCAG (formula da luminancia relativa) - usado para ESCOLHER
+  // a cor do texto em cima do fundo gerado, em vez de adivinhar um ponto
+  // de corte fixo. Nunca eyeball: qualquer fundo novo na rampa e testado
+  // aqui, ao vivo, contra as duas opcoes de texto disponiveis.
+  function _relLum([r, g, b]) {
+    const lin = c => { c /= 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  }
+  function _contrastRgb(rgb1, rgb2) {
+    const l1 = _relLum(rgb1), l2 = _relLum(rgb2);
+    const lighter = Math.max(l1, l2), darker = Math.min(l1, l2);
+    return (lighter + 0.05) / (darker + 0.05);
+  }
+
+  // Usado só nos cartões de comparação no topo (fundo branco fixo, nunca
+  // muda) - o degrade fica só na cor do texto do TAN. Confirmado que
+  // todos os passos desta rampa dão >=5:1 contra branco.
+  const TAN_TEXT_RAMP = ['#0A7A8C', '#066B7B', '#05616F', '#0C4A54', '#142A30'];
+  function colorForTan(tan, tanMin, tanMax) {
+    const rgb = _lerpRamp(TAN_TEXT_RAMP, _tanFrac(tan, tanMin, tanMax));
+    return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+  }
+
+  // Usado nas celulas das tabelas - o degrade fica no FUNDO da celula
+  // (do claro ao escuro), e a cor do texto (aplicada ao TAN e a
+  // prestacao, ambos) e escolhida em tempo real entre --ink escuro e
+  // branco, ficando sempre com o par de maior contraste. Confirmado que
+  // nenhum ponto da rampa cai numa "terra de ninguem" onde as duas
+  // opcoes de texto falhem 4,5:1 - o pior caso (frac~0.5) ainda da
+  // >=5:1 com a opcao escolhida.
+  const TAN_FILL_RAMP = ['#E3F2F3', '#C3E4E8', '#8FCBD3', '#4FA6B1', '#1D7885', '#0A4F59', '#0B2A30'];
+  const _INK_RGB = _hexToRgb('#142A30');
+  const _WHITE_RGB = [255, 255, 255];
+  function styleForTan(tan, tanMin, tanMax) {
+    const bgRgb = _lerpRamp(TAN_FILL_RAMP, _tanFrac(tan, tanMin, tanMax));
+    const background = `rgb(${bgRgb[0]}, ${bgRgb[1]}, ${bgRgb[2]})`;
+    const cDark = _contrastRgb(_INK_RGB, bgRgb);
+    const cLight = _contrastRgb(_WHITE_RGB, bgRgb);
+    const color = cDark >= cLight ? 'var(--ink)' : '#FFFFFF';
+    return { background, color };
   }
 
   const tooltip = document.getElementById('tooltip');
@@ -564,10 +604,11 @@
             </td>`;
         }
         if (!row) return '<td class="empty"></td>';
+        const st = styleForTan(row.tan, tanMin, tanMax);
         return `<td data-m="${m}" data-p="${p}">
-            <div class="cell">
-              <div class="tan" style="color:${colorForTan(row.tan, tanMin, tanMax)}">${fmtPct(row.tan)}</div>
-              <div class="presta">${fmtEur2(row.presta)}</div>
+            <div class="cell" style="background:${st.background}">
+              <div class="tan" style="color:${st.color}">${fmtPct(row.tan)}</div>
+              <div class="presta" style="color:${st.color}">${fmtEur2(row.presta)}</div>
             </div>
           </td>`;
       });
