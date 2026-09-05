@@ -42,6 +42,17 @@
   h1 { font-size: clamp(28px, 4vw, 38px); font-weight: 700; letter-spacing: -0.01em; }
   .subtitle { margin: 12px 0 0; max-width: 68ch; color: var(--ink-2); font-size: 15.5px; }
 
+  .compare-row { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 24px; }
+  .compare-card {
+    flex: 1 1 220px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: var(--shadow); padding: 16px 18px;
+  }
+  .compare-label { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); }
+  .compare-combo { margin: 2px 0 0; font-size: 12.5px; color: var(--ink-2); }
+  .compare-tan { margin: 10px 0 0; font-family: "IBM Plex Mono", monospace; font-size: 30px; font-weight: 700; line-height: 1; }
+  .compare-presta { margin: 6px 0 0; font-family: "IBM Plex Mono", monospace; font-size: 14px; color: var(--ink-2); }
+  .compare-since { margin: 10px 0 0; font-size: 12px; color: var(--ink-3); }
+
   .meta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
   .pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); font-size: 13px; color: var(--ink-2); box-shadow: var(--shadow); }
   .pill b { color: var(--ink); font-weight: 600; }
@@ -171,6 +182,7 @@
     <p class="eyebrow">Dados públicos · crédito pessoal</p>
     <h1>SIM-CRED</h1>
     <p class="subtitle">TAN e prestação mensal de simuladores de crédito pessoal portugueses, por montante (linhas) e prazo (colunas). Estrutura de quadro igual entre bancos e finalidades — a mesma posição de célula representa sempre o mesmo montante/prazo, mesmo ao trocar de banco. Células vazias são combinações sem oferta.</p>
+    <div class="compare-row" id="compareRow" hidden></div>
     <div class="meta-row" id="metaRow">
       <span class="pill"><span class="dot"></span>A carregar…</span>
     </div>
@@ -184,7 +196,7 @@
     <section class="block" id="secAtual">
       <div class="block-head">
         <h2 id="tituloAtual">Preçário atual</h2>
-        <p class="hint">Em cada célula: TAN (em destaque) e prestação mensal (por baixo, mais pequeno). Passa o rato (ou toca) numa célula para veres também a TAEG e o MTIC.</p>
+        <p class="hint">Em cada célula: TAN (em destaque, mais escuro quanto mais alto) e prestação mensal (por baixo, mais pequeno). Passa o rato (ou toca) numa célula para veres também a TAEG e o MTIC.</p>
       </div>
       <div id="boardAtual"></div>
     </section>
@@ -242,6 +254,14 @@
     },
   };
 
+  // Combinacao de referencia para o bloco de comparacao rapida no topo -
+  // fixa, nao depende do banco/finalidade que o utilizador tenha
+  // selecionado nos botoes. Escolhida uma finalidade por banco de
+  // proposito (nao se mostra qual na pagina - e so um numero de
+  // referencia rapida, nao uma etiqueta de produto).
+  const COMPARE_M = 10000, COMPARE_P = 84;
+  const COMPARE_FIN = { cof: 'Pagar Despesas / Férias e Lazer', cet: 'Obras' };
+
   const fmtPct = v => v.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
   const fmtPP = v => (v > 0 ? '+' : '') + v.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + 'pp';
   const fmtEur0 = v => v.toLocaleString('pt-PT', { maximumFractionDigits: 0 }) + ' €';
@@ -258,6 +278,35 @@
 
   function showError(title, detail) {
     document.getElementById('errorHost').innerHTML = `<div class="error"><strong>${title}</strong><br>${detail}</div>`;
+  }
+
+  // Degrade de cor do TAN por magnitude (mais escuro = TAN mais alto),
+  // para se ver visualmente qual e mais caro/barato numa tabela sem ter
+  // de ler os numeros um a um. Um so matiz (teal, a familia da marca),
+  // do mais claro ao quase-preto - nunca aplicado ao fundo da celula
+  // (so ao texto do TAN), por isso todos os passos ficam sempre bem
+  // legiveis sobre o fundo branco do cartao (contraste minimo 5:1,
+  // confirmado manualmente contra a formula WCAG antes de publicar).
+  // Domino (min/max) passado pelo chamador, calculado a partir dos
+  // valores REALMENTE presentes na tabela/comparacao em causa - nao uma
+  // escala global fixa. Um intervalo global (ex.: 6%-14% em todo o
+  // dataset) tornava o degrade praticamente impercetivel em finalidades
+  // cujo TAN real varia pouco (ex.: 9,5%-10,25%) - calibrar ao que esta
+  // mesmo a ser mostrado da mais contraste util, ao custo de o mesmo TAN
+  // poder sair com cores diferentes noutra tabela.
+  const TAN_RAMP = ['#0A7A8C', '#066B7B', '#05616F', '#0C4A54', '#142A30'];
+  function _hexToRgb(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function colorForTan(tan, tanMin, tanMax) {
+    const t = tanMax > tanMin ? Math.max(0, Math.min(1, (tan - tanMin) / (tanMax - tanMin))) : 0.5;
+    const pos = t * (TAN_RAMP.length - 1);
+    const i0 = Math.floor(pos), i1 = Math.min(TAN_RAMP.length - 1, i0 + 1);
+    const frac = pos - i0;
+    const c0 = _hexToRgb(TAN_RAMP[i0]), c1 = _hexToRgb(TAN_RAMP[i1]);
+    const mixed = c0.map((v, idx) => Math.round(v + (c1[idx] - v) * frac));
+    return `rgb(${mixed[0]}, ${mixed[1]}, ${mixed[2]})`;
   }
 
   const tooltip = document.getElementById('tooltip');
@@ -418,6 +467,59 @@
       return null;
     }
 
+    // Desde quando esta EXATA combinacao (banco+finalidade+montante+
+    // prazo) esta com o preco atual - varre para tras so essa celula
+    // (nao a finalidade inteira, ao contrario de findPreviousDifferentDate
+    // acima) e devolve o primeiro dia registado depois da ultima vez que
+    // foi diferente. Se nunca foi diferente (ou nao ha historico
+    // suficiente para saber), devolve a data mais antiga conhecida - "pelo
+    // menos desde" em vez de inventar uma data de inicio que nao se sabe.
+    function sinceDate(banco, fin, m, p) {
+      const { DATA, dates } = ctx[banco];
+      const chave = fin + '|' + m + '|' + p;
+      const porData = {};
+      DATA.forEach(r => { if (r.f + '|' + r.m + '|' + r.p === chave) porData[r.d] = r; });
+      const cur = porData[dates[dates.length - 1]];
+      if (!cur) return null;
+      for (let i = dates.length - 2; i >= 0; i--) {
+        const old = porData[dates[i]];
+        const diferente = !old || Math.abs(old.tan - cur.tan) > 0.005 || Math.abs(old.presta - cur.presta) > 0.005;
+        if (diferente) return dates[i + 1];
+      }
+      return dates[0];
+    }
+
+    function renderCompare() {
+      const host = document.getElementById('compareRow');
+      const linhas = bancosDisponiveis
+        .map(id => {
+          const fin = COMPARE_FIN[id];
+          if (!fin || !ctx[id].finalidades.includes(fin)) return null;
+          const row = ctx[id].latestRows.find(r => r.f === fin && r.m === COMPARE_M && r.p === COMPARE_P);
+          return row ? { id, fin, row } : null;
+        })
+        .filter(Boolean);
+      // domino da cor = so os valores em comparacao aqui (tipicamente 2),
+      // para se ver de imediato qual dos dois e mais alto - nao a escala
+      // usada nas tabelas de baixo.
+      const tansCompare = linhas.map(l => l.row.tan);
+      const tanMinC = Math.min(...tansCompare), tanMaxC = Math.max(...tansCompare);
+      const cartoes = linhas.map(({ id, fin, row }) => {
+        const desde = sinceDate(id, fin, COMPARE_M, COMPARE_P);
+        return `
+          <div class="compare-card">
+            <p class="compare-label">${BANCOS[id].label}</p>
+            <p class="compare-combo">${fmtEur0(COMPARE_M)} · ${COMPARE_P} meses</p>
+            <p class="compare-tan" style="color:${colorForTan(row.tan, tanMinC, tanMaxC)}">${fmtPct(row.tan)}</p>
+            <p class="compare-presta">${fmtEur2(row.presta)}/mês</p>
+            <p class="compare-since">${desde ? 'Preço em vigor desde, pelo menos, ' + fmtDate(desde) : ''}</p>
+          </div>`;
+      });
+      if (!cartoes.length) { host.hidden = true; return; }
+      host.hidden = false;
+      host.innerHTML = cartoes.join('');
+    }
+
     function tableHtml(fin, cellRenderer) {
       let html = '<div class="scroll-x"><table class="grid"><tbody>';
       allMontantes.forEach(m => {
@@ -435,6 +537,14 @@
     function renderCard(hostId, banco, fin, kind, rows, compareRows) {
       const idx = buildIndex(rows);
       const prevIdx = compareRows ? buildIndex(compareRows) : null;
+
+      // Domino do degrade de TAN calibrado aos valores desta finalidade
+      // NESTA tabela (nao a uma escala global) - da muito mais contraste
+      // util, ao custo de o mesmo TAN poder ter tons diferentes noutra
+      // finalidade/tabela.
+      const tansAqui = rows.filter(r => r.f === fin).map(r => r.tan);
+      const tanMin = tansAqui.length ? Math.min(...tansAqui) : 0;
+      const tanMax = tansAqui.length ? Math.max(...tansAqui) : 0;
 
       let html = `<div class="card"><div class="card-head">${BANCOS[banco].label} · ${fin}</div>`;
       html += tableHtml(fin, (f, m, p) => {
@@ -456,7 +566,7 @@
         if (!row) return '<td class="empty"></td>';
         return `<td data-m="${m}" data-p="${p}">
             <div class="cell">
-              <div class="tan">${fmtPct(row.tan)}</div>
+              <div class="tan" style="color:${colorForTan(row.tan, tanMin, tanMax)}">${fmtPct(row.tan)}</div>
               <div class="presta">${fmtEur2(row.presta)}</div>
             </div>
           </td>`;
@@ -561,6 +671,7 @@
       }
     }
 
+    renderCompare();
     renderBancoButtons();
     renderFinButtons();
     renderMetaRow();
