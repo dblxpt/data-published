@@ -53,20 +53,20 @@ carrega a tabela directamente numa folha, pronta para graficos.
 
 Preçário (TAN/TAEG/MTIC/prestação) de um simulador de crédito pessoal
 português, para várias combinações de montante, prazo e finalidade.
-Atualizado diariamente. Codigo fonte num repositorio privado separado.
+Atualizado semanalmente (à terça-feira). Codigo fonte num repositorio
+privado separado.
 
 - `crawler-cred/cof.csv` - snapshot mais recente
 - `crawler-cred/cof.json` - a mesma recolha em bruto (JSON completo)
-
-Ao contrário dos outros projetos aqui publicados, este não mantém
-histórico neste repositório (só o snapshot do dia mais recente) - o
-histórico cumulativo fica guardado no repositório de origem, privado.
+- `crawler-cred/cof_historico.csv` - histórico cumulativo (uma linha por
+  combinação por dia de recolha)
 
 Acesso directo (sem autenticacao, repositorio publico):
 
 ```
 https://raw.githubusercontent.com/dblxpt/data-published/main/crawler-cred/cof.csv
 https://raw.githubusercontent.com/dblxpt/data-published/main/crawler-cred/cof.json
+https://raw.githubusercontent.com/dblxpt/data-published/main/crawler-cred/cof_historico.csv
 ```
 
 ## Nota
