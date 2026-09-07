@@ -245,6 +245,12 @@
     <p class="sub">Quanto o preço atual está abaixo da máxima dos últimos 52 semanas, por ETF.</p>
     <svg id="barAth"></svg>
   </div>
+
+  <div class="card">
+    <h2>Valorização (P/E trailing)</h2>
+    <p class="sub">Rácio preço/lucro dos últimos 12 meses, do mais barato para o mais caro. Cobertura do yfinance para ETFs UCITS europeus é limitada &mdash; ETFs sem componente de ações com lucros (obrigações, ouro, cash) ou sem o campo publicado pelo Yahoo Finance não aparecem aqui.</p>
+    <svg id="barPE"></svg>
+  </div>
 </div>
 
 <div class="tooltip" id="tooltip"></div>
@@ -252,7 +258,8 @@
 <script>
 (function () {
   var DATA_URL = 'https://raw.githubusercontent.com/dblxpt/data-published/main/routine-data-etf/history.jsonl';
-  var FIELDS = ['isin', 'ticker_used', 'price', 'return_ytd_pct', 'return_1y_pct', 'volatility_1y_pct',
+  var FIELDS = ['isin', 'ticker_used', 'price', 'trailing_pe', 'forward_pe',
+    'return_ytd_pct', 'return_1y_pct', 'volatility_1y_pct',
     'return_5y_pct', 'volatility_5y_pct', 'return_10y_pct', 'volatility_10y_pct',
     'sharpe_1y', 'max_drawdown_pct', 'pct_below_ath'];
 
@@ -445,6 +452,74 @@
     });
   }
 
+  // ---------- Single-hue positive magnitude bar, growing from a left baseline ----------
+  function renderPositiveBar(svgId, metricKey, metricLabel, unit) {
+    var svg = document.getElementById(svgId);
+    var fmtVal = unit === 'x' ? function (v) { return v.toFixed(1) + 'x'; } : fmtPct;
+    var items = Object.keys(data).filter(function (k) {
+      return typeof data[k][metricKey] === 'number';
+    }).map(function (k) {
+      return { name: k, value: data[k][metricKey], raw: data[k] };
+    }).sort(function (a, b) { return a.value - b.value; });
+
+    var width = 700, leftLabelW = 60, rightPad = 60;
+    var rowH = 28, barH = 18;
+    var plotW = width - leftLabelW - rightPad;
+
+    if (!items.length) {
+      var emptyH = 80;
+      svg.setAttribute('viewBox', '0 0 ' + width + ' ' + emptyH);
+      svg.setAttribute('width', '100%');
+      svg.setAttribute('height', emptyH);
+      svg.innerHTML = '';
+      svg.appendChild(text('Sem ETFs com este dado disponível neste snapshot.', { x: width / 2, y: 44, 'text-anchor': 'middle' }, 'axis-tick'));
+      return;
+    }
+
+    var height = items.length * rowH + 24;
+    var maxVal = Math.max.apply(null, items.map(function (d) { return d.value; }));
+    var step = niceStep(maxVal / 4);
+    var axisMax = Math.ceil(maxVal / step) * step;
+    var scale = plotW / axisMax;
+
+    svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', height);
+    svg.innerHTML = '';
+
+    for (var v = 0; v <= axisMax + 0.001; v += step) {
+      var x = leftLabelW + v * scale;
+      svg.appendChild(el('line', { x1: x, x2: x, y1: 0, y2: height - 14, class: v === 0 ? 'baseline-line' : 'grid-line' }));
+      svg.appendChild(text(fmtVal(v), { x: x, y: height - 2, 'text-anchor': 'middle' }, 'axis-tick'));
+    }
+
+    items.forEach(function (d, i) {
+      var y = i * rowH + (rowH - barH) / 2;
+      var w = Math.max(1, d.value * scale);
+
+      svg.appendChild(text(d.name, { x: leftLabelW - 10, y: y + barH / 2 + 4, 'text-anchor': 'end' }, 'bar-label'));
+
+      var rect = el('rect', { x: leftLabelW, y: y, width: w, height: barH, rx: 4, fill: 'var(--scatter-dot)', class: 'bar-rect' });
+      svg.appendChild(rect);
+
+      svg.appendChild(text(fmtVal(d.value), { x: leftLabelW + w + 6, y: y + barH / 2 + 4, 'text-anchor': 'start' }, 'value-label'));
+
+      var hit = el('rect', { x: leftLabelW, y: i * rowH, width: plotW, height: rowH, class: 'bar-hit' });
+      function onHover(ev) {
+        var block = tipBlock(d.raw.ticker_used + ' (' + d.name + ')', [
+          tipRow(metricLabel, fmtVal(d.value)),
+          tipRow('P/E forward', typeof d.raw.forward_pe === 'number' ? fmtVal(d.raw.forward_pe) : '—'),
+          tipRow('Preço atual', d.raw.price.toFixed(2))
+        ]);
+        showTip(block, ev.clientX, ev.clientY);
+      }
+      hit.addEventListener('pointerenter', onHover);
+      hit.addEventListener('pointermove', onHover);
+      hit.addEventListener('pointerleave', hideTip);
+      svg.appendChild(hit);
+    });
+  }
+
   // ---------- Scatter: volatility vs return (generic, any horizon) ----------
   function niceStep(rough) {
     if (!(rough > 0)) return 1;
@@ -598,6 +673,7 @@
     table.innerHTML = '';
     var cols = [
       ['ETF', 'name'], ['ISIN', 'isin'], ['Ticker', 'ticker_used'], ['Preço', 'price'],
+      ['P/E TTM', 'trailing_pe'], ['P/E fwd', 'forward_pe'],
       ['YTD %', 'return_ytd_pct'], ['1a %', 'return_1y_pct'], ['5a %', 'return_5y_pct'], ['10a %', 'return_10y_pct'],
       ['Vol. 1a %', 'volatility_1y_pct'], ['Vol. 5a %', 'volatility_5y_pct'], ['Vol. 10a %', 'volatility_10y_pct'],
       ['Sharpe 1a', 'sharpe_1y'], ['Drawdown %', 'max_drawdown_pct'], ['Abaixo ATH %', 'pct_below_ath']
@@ -624,7 +700,7 @@
         if (key === 'name') { val = name; td.className = 'name'; }
         else if (key === 'isin' || key === 'ticker_used') { val = d[key]; }
         else if (key === 'price') { val = d[key].toFixed(2); }
-        else if (key === 'sharpe_1y') { val = fmtNum(d[key]); }
+        else if (key === 'sharpe_1y' || key === 'trailing_pe' || key === 'forward_pe') { val = fmtNum(d[key]); }
         else {
           val = fmtPct(d[key]);
           if (typeof d[key] === 'number') td.className = d[key] >= 0 ? 'pos' : 'neg';
@@ -657,6 +733,7 @@
     renderDivergingBar('bar1y', 'return_1y_pct', 'Retorno 12m');
     renderDivergingBar('barSharpe', 'sharpe_1y', 'Sharpe 12m', 'ratio');
     renderMagnitudeBar('barAth', 'pct_below_ath', 'Abaixo do topo 52s');
+    renderPositiveBar('barPE', 'trailing_pe', 'P/E trailing', 'x');
     renderRiskReturnScatter('scatter', 'volatility_1y_pct', 'return_1y_pct', 'Volatilidade 12 meses (%)', '12m');
     renderRiskReturnScatter('scatter5y', 'volatility_5y_pct', 'return_5y_pct', 'Volatilidade 5 anos (%)', '5a');
     renderRiskReturnScatter('scatter10y', 'volatility_10y_pct', 'return_10y_pct', 'Volatilidade 10 anos (%)', '10a');
