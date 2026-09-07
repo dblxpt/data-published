@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-07T21:07:07.770893+00:00",
+  "generated_at": "2026-09-07T21:37:30.535819+00:00",
   "source_notes": "Sem fallbacks/proxies aplicados nesta execucao.",
   "assets": {
     "XEON": {
@@ -7,6 +7,8 @@
       "ticker_used": "XEON.DE",
       "source": "yfinance",
       "price": 150.11599731445312,
+      "trailing_pe": null,
+      "forward_pe": null,
       "return_ytd_pct": 1.3578215758593304,
       "return_1y_pct": 2.0086936523397547,
       "volatility_1y_pct": 0.2016664571411405,
@@ -18,13 +20,15 @@
       "max_drawdown_pct": -0.5642275517579565,
       "ath_52w": 150.11599731445312,
       "pct_below_ath": 0.0,
-      "notes": "max_drawdown_pct calculado sobre os ultimos 5 anos (historico mais longo disponivel); sharpe_1y nao aplicavel (instrumento usado como taxa livre de risco)"
+      "notes": "max_drawdown_pct calculado sobre os ultimos 5 anos (historico mais longo disponivel); P/E nao disponivel para este activo (comum em ETFs sem componente de acoes com lucros, como obrigacoes, ouro ou cash, ou quando o yfinance nao publica o campo para este fundo); sharpe_1y nao aplicavel (instrumento usado como taxa livre de risco)"
     },
     "FLXI": {
       "isin": "IE00BHZRQZ17",
       "ticker_used": "FLXI.DE",
       "source": "yfinance",
       "price": 35.595001220703125,
+      "trailing_pe": null,
+      "forward_pe": null,
       "return_ytd_pct": -8.130075617551213,
       "return_1y_pct": -4.468591454197268,
       "volatility_1y_pct": 14.698474164132962,
@@ -36,13 +40,15 @@
       "max_drawdown_pct": -24.761253985894637,
       "ath_52w": 39.790000915527344,
       "pct_below_ath": -10.542848952755858,
-      "notes": "Ticker a confirmar; alternativa FRIN.L (LSE).; historico insuficiente (<10 anos) para retorno/volatilidade a 10 anos; max_drawdown_pct calculado sobre os ultimos 5 anos (historico mais longo disponivel)"
+      "notes": "Ticker a confirmar; alternativa FRIN.L (LSE).; historico insuficiente (<10 anos) para retorno/volatilidade a 10 anos; max_drawdown_pct calculado sobre os ultimos 5 anos (historico mais longo disponivel); P/E nao disponivel para este activo (comum em ETFs sem componente de acoes com lucros, como obrigacoes, ouro ou cash, ou quando o yfinance nao publica o campo para este fundo)"
     },
     "4GLD": {
       "isin": "DE000A0S9GB0",
       "ticker_used": "4GLD.DE",
       "source": "yfinance",
       "price": 122.02999877929688,
+      "trailing_pe": null,
+      "forward_pe": null,
       "return_ytd_pct": 3.2228028415267174,
       "return_1y_pct": 24.153014185209166,
       "volatility_1y_pct": 25.823461784423685,
@@ -54,13 +60,15 @@
       "max_drawdown_pct": -22.489523413781864,
       "ath_52w": 145.49000549316406,
       "pct_below_ath": -16.124823581073734,
-      "notes": "max_drawdown_pct calculado sobre os ultimos 5 anos (historico mais longo disponivel)"
+      "notes": "max_drawdown_pct calculado sobre os ultimos 5 anos (historico mais longo disponivel); P/E nao disponivel para este activo (comum em ETFs sem componente de acoes com lucros, como obrigacoes, ouro ou cash, ou quando o yfinance nao publica o campo para este fundo)"
     },
     "EMXC": {
       "isin": "LU2009202107",
       "ticker_used": "EMXC.DE",
       "source": "yfinance",
       "price": 42.029998779296875,
+      "trailing_pe": null,
+      "forward_pe": null,
       "return_ytd_pct": 38.64422905774967,
       "return_1y_pct": 62.93854876908171,
       "volatility_1y_pct": 31.981228991052806,
@@ -72,13 +80,15 @@
       "max_drawdown_pct": -20.482849028545914,
       "ath_52w": 44.80500030517578,
       "pct_below_ath": -6.193508552567383,
-      "notes": "historico insuficiente (<10 anos) para retorno/volatilidade a 10 anos; max_drawdown_pct calculado sobre os ultimos 5 anos (historico mais longo disponivel)"
+      "notes": "historico insuficiente (<10 anos) para retorno/volatilidade a 10 anos; max_drawdown_pct calculado sobre os ultimos 5 anos (historico mais longo disponivel); P/E nao disponivel para este activo (comum em ETFs sem componente de acoes com lucros, como obrigacoes, ouro ou cash, ou quando o yfinance nao publica o campo para este fundo)"
     },
     "MEUD": {
       "isin": "LU0908500753",
       "ticker_used": "MEUD.PA",
       "source": "yfinance",
       "price": 320.45001220703125,
+      "trailing_pe": 17.829884,
+      "forward_pe": null,
       "return_ytd_pct": 11.526825316728884,
       "return_1y_pct": 21.571386114461234,
       "volatility_1y_pct": 12.64644814510806,
@@ -97,6 +107,8 @@
       "ticker_used": "EUDF.DE",
       "source": "yfinance",
       "price": 30.969999313354492,
+      "trailing_pe": 32.77554,
+      "forward_pe": null,
       "return_ytd_pct": 0.6009402853966117,
       "return_1y_pct": 3.752090176119527,
       "volatility_1y_pct": 28.02012944659122,
@@ -115,6 +127,8 @@
       "ticker_used": "QDVE.DE",
       "source": "yfinance",
       "price": 44.5099983215332,
+      "trailing_pe": null,
+      "forward_pe": null,
       "return_ytd_pct": 24.76523972926823,
       "return_1y_pct": 36.19950399597707,
       "volatility_1y_pct": 22.493315131243833,
@@ -126,13 +140,15 @@
       "max_drawdown_pct": -29.82743631010617,
       "ath_52w": 46.0099983215332,
       "pct_below_ath": -3.2601609535334086,
-      "notes": "max_drawdown_pct calculado sobre os ultimos 5 anos (historico mais longo disponivel)"
+      "notes": "max_drawdown_pct calculado sobre os ultimos 5 anos (historico mais longo disponivel); P/E nao disponivel para este activo (comum em ETFs sem componente de acoes com lucros, como obrigacoes, ouro ou cash, ou quando o yfinance nao publica o campo para este fundo)"
     },
     "WEBN": {
       "isin": "IE0003XJA0J9",
       "ticker_used": "WEBN.DE",
       "source": "yfinance",
       "price": 12.942000389099121,
+      "trailing_pe": null,
+      "forward_pe": null,
       "return_ytd_pct": 15.532947482017079,
       "return_1y_pct": 23.894316161383312,
       "volatility_1y_pct": 24.2576084997823,
@@ -144,13 +160,15 @@
       "max_drawdown_pct": -21.21774843286368,
       "ath_52w": 13.076000213623047,
       "pct_below_ath": -1.024776860926635,
-      "notes": "historico insuficiente (<5 anos) para retorno/volatilidade a 5 anos; historico insuficiente (<10 anos) para retorno/volatilidade a 10 anos"
+      "notes": "historico insuficiente (<5 anos) para retorno/volatilidade a 5 anos; historico insuficiente (<10 anos) para retorno/volatilidade a 10 anos; P/E nao disponivel para este activo (comum em ETFs sem componente de acoes com lucros, como obrigacoes, ouro ou cash, ou quando o yfinance nao publica o campo para este fundo)"
     },
     "EUNN": {
       "isin": "IE00B4L5YX21",
       "ticker_used": "EUNN.DE",
       "source": "yfinance",
       "price": 73.20999908447266,
+      "trailing_pe": null,
+      "forward_pe": null,
       "return_ytd_pct": 23.874790143235103,
       "return_1y_pct": 30.923852862025814,
       "volatility_1y_pct": 19.089477195999603,
@@ -162,13 +180,15 @@
       "max_drawdown_pct": -19.406088881082482,
       "ath_52w": 73.5,
       "pct_below_ath": -0.39455906874468205,
-      "notes": "max_drawdown_pct calculado sobre os ultimos 5 anos (historico mais longo disponivel)"
+      "notes": "max_drawdown_pct calculado sobre os ultimos 5 anos (historico mais longo disponivel); P/E nao disponivel para este activo (comum em ETFs sem componente de acoes com lucros, como obrigacoes, ouro ou cash, ou quando o yfinance nao publica o campo para este fundo)"
     },
     "SP2Q": {
       "isin": "IE00BNGJJT35",
       "ticker_used": "SP2Q.DE",
       "source": "yfinance",
       "price": 64.16999816894531,
+      "trailing_pe": null,
+      "forward_pe": null,
       "return_ytd_pct": 15.330695314284704,
       "return_1y_pct": 19.031716472961048,
       "volatility_1y_pct": 9.970817557895046,
@@ -180,13 +200,15 @@
       "max_drawdown_pct": -22.733365247141503,
       "ath_52w": 65.75,
       "pct_below_ath": -2.403044609969107,
-      "notes": "Ticker Yahoo a confirmar (SP2Q); cobertura directa pode nao existir. Fallback Twelve Data usa RSP (Invesco S&P 500 Equal Weight ETF, US) como PROXY do mesmo indice - nao e o mesmo fundo UCITS, serve apenas de aproximacao quando SP2Q nao tem dados.; historico insuficiente (<10 anos) para retorno/volatilidade a 10 anos; max_drawdown_pct calculado sobre os ultimos 5 anos (historico mais longo disponivel)"
+      "notes": "Ticker Yahoo a confirmar (SP2Q); cobertura directa pode nao existir. Fallback Twelve Data usa RSP (Invesco S&P 500 Equal Weight ETF, US) como PROXY do mesmo indice - nao e o mesmo fundo UCITS, serve apenas de aproximacao quando SP2Q nao tem dados.; historico insuficiente (<10 anos) para retorno/volatilidade a 10 anos; max_drawdown_pct calculado sobre os ultimos 5 anos (historico mais longo disponivel); P/E nao disponivel para este activo (comum em ETFs sem componente de acoes com lucros, como obrigacoes, ouro ou cash, ou quando o yfinance nao publica o campo para este fundo)"
     },
     "IUSN": {
       "isin": "IE00BF4RFH31",
       "ticker_used": "IUSN.DE",
       "source": "yfinance",
       "price": 9.142999649047852,
+      "trailing_pe": null,
+      "forward_pe": null,
       "return_ytd_pct": 17.943754128190715,
       "return_1y_pct": 23.922471110085077,
       "volatility_1y_pct": 13.541589808143334,
@@ -198,13 +220,15 @@
       "max_drawdown_pct": -24.315517984407485,
       "ath_52w": 9.32800006866455,
       "pct_below_ath": -1.9832806416690496,
-      "notes": "historico insuficiente (<10 anos) para retorno/volatilidade a 10 anos; max_drawdown_pct calculado sobre os ultimos 5 anos (historico mais longo disponivel)"
+      "notes": "historico insuficiente (<10 anos) para retorno/volatilidade a 10 anos; max_drawdown_pct calculado sobre os ultimos 5 anos (historico mais longo disponivel); P/E nao disponivel para este activo (comum em ETFs sem componente de acoes com lucros, como obrigacoes, ouro ou cash, ou quando o yfinance nao publica o campo para este fundo)"
     },
     "XAIX": {
       "isin": "IE00BGV5VN51",
       "ticker_used": "XAIX.DE",
       "source": "yfinance",
       "price": 208.3000030517578,
+      "trailing_pe": null,
+      "forward_pe": null,
       "return_ytd_pct": 34.752232232093895,
       "return_1y_pct": 49.6408100707133,
       "volatility_1y_pct": 32.328395611847164,
@@ -216,7 +240,7 @@
       "max_drawdown_pct": -33.0804754347501,
       "ath_52w": 220.3000030517578,
       "pct_below_ath": -5.447117491496667,
-      "notes": "historico insuficiente (<10 anos) para retorno/volatilidade a 10 anos; max_drawdown_pct calculado sobre os ultimos 5 anos (historico mais longo disponivel)"
+      "notes": "historico insuficiente (<10 anos) para retorno/volatilidade a 10 anos; max_drawdown_pct calculado sobre os ultimos 5 anos (historico mais longo disponivel); P/E nao disponivel para este activo (comum em ETFs sem componente de acoes com lucros, como obrigacoes, ouro ou cash, ou quando o yfinance nao publica o campo para este fundo)"
     }
   }
 }
