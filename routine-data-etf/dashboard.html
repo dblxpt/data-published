@@ -16,6 +16,10 @@
     --neutral-mid:    #f0efec;
     --scatter-dot:    #2a78d6;
     --good-text:      #006300;
+    --sma50:          #eb6834;
+    --sma200:         #1baf7a;
+    --status-good:    #0ca30c;
+    --status-critical:#d03b3b;
   }
   @media (prefers-color-scheme: dark) {
     :root:where(:not([data-theme="light"])) .viz-root {
@@ -33,6 +37,10 @@
       --neutral-mid:    #383835;
       --scatter-dot:    #3987e5;
       --good-text:      #0ca30c;
+      --sma50:          #d95926;
+      --sma200:         #199e70;
+      --status-good:    #0ca30c;
+      --status-critical:#d03b3b;
     }
   }
   :root[data-theme="dark"] .viz-root {
@@ -50,6 +58,10 @@
     --neutral-mid:    #383835;
     --scatter-dot:    #3987e5;
     --good-text:      #0ca30c;
+    --sma50:          #d95926;
+    --sma200:         #199e70;
+    --status-good:    #0ca30c;
+    --status-critical:#d03b3b;
   }
 
   * { box-sizing: border-box; }
@@ -158,6 +170,26 @@
   .tile .t-delta.pos { color: var(--good-text); }
   .tile .t-delta.neg { color: var(--neg); }
   .tile svg { margin-top: 6px; }
+
+  .trend-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: 14px;
+  }
+  .trend-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px 8px;
+  }
+  .trend-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 2px; }
+  .trend-title { font-size: 13px; font-weight: 650; color: var(--text-primary); }
+  .trend-title span { color: var(--text-muted); font-weight: 400; }
+  .trend-badge { font-size: 11px; font-weight: 650; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+  .trend-badge.bull { color: var(--status-good); background: rgba(12,163,12,0.12); }
+  .trend-badge.bear { color: var(--status-critical); background: rgba(208,59,59,0.12); }
+  .trend-badge.neutral { color: var(--text-muted); background: var(--neutral-mid); }
+  .trend-card svg { display: block; cursor: crosshair; }
+  .crosshair-line { stroke: var(--baseline); stroke-width: 1; stroke-dasharray: 3,3; }
 </style>
 
 <div class="viz-root">
@@ -190,6 +222,17 @@
     <h2>Evolução de preço</h2>
     <p class="sub">Preço em cada snapshot coletado, por ETF, com variação desde o primeiro registro.</p>
     <div class="tile-grid" id="priceTiles"></div>
+  </div>
+
+  <div class="card">
+    <h2>Tendência (SMA 50/200)</h2>
+    <p class="sub">Preço diário com médias móveis de 50 e 200 dias, por ETF &mdash; o cruzamento clássico para ler o regime de bull/bear. Passe o cursor sobre um gráfico para ver os valores numa data específica.</p>
+    <div class="legend">
+      <span class="key"><span class="swatch" style="background:var(--pos)"></span>Preço</span>
+      <span class="key"><span class="swatch" style="background:var(--sma50)"></span>SMA 50</span>
+      <span class="key"><span class="swatch" style="background:var(--sma200)"></span>SMA 200</span>
+    </div>
+    <div class="trend-grid" id="trendGrid"></div>
   </div>
 
   <div class="card">
@@ -258,6 +301,7 @@
 <script>
 (function () {
   var DATA_URL = 'https://raw.githubusercontent.com/dblxpt/data-published/main/routine-data-etf/history.jsonl';
+  var PRICE_URL = 'https://raw.githubusercontent.com/dblxpt/data-published/main/routine-data-etf/price_history.json';
   var FIELDS = ['isin', 'ticker_used', 'price', 'trailing_pe', 'forward_pe',
     'return_ytd_pct', 'return_1y_pct', 'volatility_1y_pct',
     'return_5y_pct', 'volatility_5y_pct', 'return_10y_pct', 'volatility_10y_pct',
@@ -266,6 +310,7 @@
   var data = {};
   var snapshots = [];
   var generatedAt = null;
+  var priceHistory = {};
 
   var tooltip = document.getElementById('tooltip');
   function showTip(html, x, y) {
@@ -738,7 +783,167 @@
     renderRiskReturnScatter('scatter5y', 'volatility_5y_pct', 'return_5y_pct', 'Volatilidade 5 anos (%)', '5a');
     renderRiskReturnScatter('scatter10y', 'volatility_10y_pct', 'return_10y_pct', 'Volatilidade 10 anos (%)', '10a');
     renderPriceTiles();
+    renderTrendCharts();
     renderTable();
+  }
+
+  // ---------- Trend charts: price + SMA50/SMA200 per asset ----------
+  function computeSMA(values, period) {
+    var result = new Array(values.length).fill(null);
+    var sum = 0;
+    for (var i = 0; i < values.length; i++) {
+      sum += values[i];
+      if (i >= period) sum -= values[i - period];
+      if (i >= period - 1) result[i] = sum / period;
+    }
+    return result;
+  }
+
+  function fmtMonthYear(dateStr) {
+    var d = new Date(dateStr + 'T00:00:00Z');
+    return d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC' });
+  }
+
+  function drawTrendSvg(svg, name, dates, closes, sma50, sma200) {
+    var width = 620, height = 260;
+    var padL = 54, padR = 14, padT = 10, padB = 26;
+    var plotW = width - padL - padR, plotH = height - padT - padB;
+    var n = closes.length;
+
+    var allVals = [];
+    [closes, sma50, sma200].forEach(function (arr) {
+      arr.forEach(function (v) { if (v != null) allVals.push(v); });
+    });
+    var vMin = Math.min.apply(null, allVals);
+    var vMax = Math.max.apply(null, allVals);
+    var pad = (vMax - vMin) * 0.06 || vMax * 0.06 || 1;
+    vMin -= pad;
+    vMax += pad;
+
+    function xPix(i) { return padL + (i / (n - 1)) * plotW; }
+    function yPix(v) { return padT + (1 - (v - vMin) / (vMax - vMin)) * plotH; }
+
+    svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', height);
+    svg.innerHTML = '';
+
+    var yStep = niceStep((vMax - vMin) / 4);
+    for (var v = Math.ceil(vMin / yStep) * yStep; v <= vMax; v += yStep) {
+      var yy = yPix(v);
+      svg.appendChild(el('line', { x1: padL, x2: width - padR, y1: yy, y2: yy, class: 'grid-line' }));
+      svg.appendChild(text(v >= 100 ? v.toFixed(0) : v.toFixed(2), { x: padL - 8, y: yy + 3, 'text-anchor': 'end' }, 'axis-tick'));
+    }
+
+    var tickCount = Math.min(5, n);
+    for (var t = 0; t < tickCount; t++) {
+      var idx = Math.round(t * (n - 1) / (tickCount - 1));
+      var xx = xPix(idx);
+      var anchor = t === 0 ? 'start' : (t === tickCount - 1 ? 'end' : 'middle');
+      svg.appendChild(text(fmtMonthYear(dates[idx]), { x: xx, y: height - 6, 'text-anchor': anchor }, 'axis-tick'));
+    }
+
+    function pathFor(arr) {
+      var d = '';
+      var started = false;
+      for (var i = 0; i < n; i++) {
+        if (arr[i] == null) { started = false; continue; }
+        d += (started ? 'L' : 'M') + xPix(i).toFixed(1) + ',' + yPix(arr[i]).toFixed(1) + ' ';
+        started = true;
+      }
+      return d.trim();
+    }
+
+    svg.appendChild(el('path', { d: pathFor(closes), fill: 'none', stroke: 'var(--pos)', 'stroke-width': 1.4, opacity: 0.85 }));
+    svg.appendChild(el('path', { d: pathFor(sma50), fill: 'none', stroke: 'var(--sma50)', 'stroke-width': 2, 'stroke-linejoin': 'round' }));
+    svg.appendChild(el('path', { d: pathFor(sma200), fill: 'none', stroke: 'var(--sma200)', 'stroke-width': 2, 'stroke-linejoin': 'round' }));
+
+    var crosshair = el('line', { x1: padL, x2: padL, y1: padT, y2: height - padB, class: 'crosshair-line', visibility: 'hidden' });
+    svg.appendChild(crosshair);
+
+    var hit = el('rect', { x: padL, y: padT, width: Math.max(1, plotW), height: Math.max(1, plotH), fill: 'transparent' });
+    function onMove(ev) {
+      var rect = svg.getBoundingClientRect();
+      if (!rect.width) return;
+      var scaleX = width / rect.width;
+      var localX = (ev.clientX - rect.left) * scaleX;
+      var idx = Math.round(((localX - padL) / plotW) * (n - 1));
+      idx = Math.max(0, Math.min(n - 1, idx));
+      var xx = xPix(idx);
+      crosshair.setAttribute('x1', xx);
+      crosshair.setAttribute('x2', xx);
+      crosshair.setAttribute('visibility', 'visible');
+      var block = tipBlock(name + ' — ' + dates[idx], [
+        tipRow('Preço', closes[idx] != null ? closes[idx].toFixed(2) : '—'),
+        tipRow('SMA 50', sma50[idx] != null ? sma50[idx].toFixed(2) : '—'),
+        tipRow('SMA 200', sma200[idx] != null ? sma200[idx].toFixed(2) : '—')
+      ]);
+      showTip(block, ev.clientX, ev.clientY);
+    }
+    hit.addEventListener('pointermove', onMove);
+    hit.addEventListener('pointerenter', onMove);
+    hit.addEventListener('pointerleave', function () {
+      crosshair.setAttribute('visibility', 'hidden');
+      hideTip();
+    });
+    svg.appendChild(hit);
+  }
+
+  function renderTrendCharts() {
+    var grid = document.getElementById('trendGrid');
+    grid.innerHTML = '';
+    var names = Object.keys(priceHistory).filter(function (k) {
+      return priceHistory[k] && priceHistory[k].prices && priceHistory[k].prices.length;
+    }).sort();
+
+    names.forEach(function (name) {
+      var series = priceHistory[name].prices;
+      var dates = series.map(function (p) { return p.date; });
+      var closes = series.map(function (p) { return p.close; });
+      var sma50 = computeSMA(closes, 50);
+      var sma200 = computeSMA(closes, 200);
+      var n = closes.length;
+      var lastClose = closes[n - 1];
+      var lastSma50 = sma50[n - 1];
+      var lastSma200 = sma200[n - 1];
+
+      var card = document.createElement('div');
+      card.className = 'trend-card';
+
+      var head = document.createElement('div');
+      head.className = 'trend-head';
+
+      var title = document.createElement('div');
+      title.className = 'trend-title';
+      title.textContent = name;
+      var tickerSpan = document.createElement('span');
+      tickerSpan.textContent = ' · ' + (priceHistory[name].ticker_used || '');
+      title.appendChild(tickerSpan);
+      head.appendChild(title);
+
+      var badge = document.createElement('span');
+      if (lastSma200 == null) {
+        badge.className = 'trend-badge neutral';
+        badge.textContent = 'Histórico insuficiente p/ SMA 200';
+      } else if (lastClose > lastSma200 && lastSma50 > lastSma200) {
+        badge.className = 'trend-badge bull';
+        badge.textContent = '▲ Bull';
+      } else if (lastClose < lastSma200 && lastSma50 < lastSma200) {
+        badge.className = 'trend-badge bear';
+        badge.textContent = '▼ Bear';
+      } else {
+        badge.className = 'trend-badge neutral';
+        badge.textContent = '● Misto';
+      }
+      head.appendChild(badge);
+      card.appendChild(head);
+
+      var svg = el('svg', {});
+      card.appendChild(svg);
+      grid.appendChild(card);
+
+      drawTrendSvg(svg, name, dates, closes, sma50, sma200);
+    });
   }
 
   function parseJsonl(text) {
@@ -780,23 +985,29 @@
     } else if (state === 'error') {
       statusLine.hidden = true;
       errorBox.hidden = false;
-      errorDetail.textContent = 'Falha ao buscar ' + DATA_URL + ' (' + (detail && detail.message ? detail.message : detail) + '). ' +
+      errorDetail.textContent = 'Falha ao buscar dados do GitHub (' + (detail && detail.message ? detail.message : detail) + '). ' +
         'Se este painel estiver aberto como Artifact do claude.ai, o sandbox bloqueia requisições a domínios externos — abra o arquivo fora do claude.ai (localmente ou hospedado) para carregar dados ao vivo.';
     }
   }
 
   function loadData() {
     setStatus('loading');
-    var bustedUrl = DATA_URL + '?_=' + Date.now();
-    fetch(bustedUrl, { cache: 'no-store' })
-      .then(function (res) {
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+    var bust = '?_=' + Date.now();
+    Promise.all([
+      fetch(DATA_URL + bust, { cache: 'no-store' }).then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status + ' (history.jsonl)');
         return res.text();
+      }),
+      fetch(PRICE_URL + bust, { cache: 'no-store' }).then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status + ' (price_history.json)');
+        return res.json();
       })
-      .then(function (text) {
-        var records = parseJsonl(text);
+    ])
+      .then(function (results) {
+        var records = parseJsonl(results[0]);
         if (!records.length) throw new Error('arquivo vazio');
         buildFromRecords(records);
+        priceHistory = results[1].assets || {};
         renderAll();
         setStatus('ok');
       })
