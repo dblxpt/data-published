@@ -304,7 +304,7 @@
     ));
 
   function init(DATA) {
-    const order = ['Pagar Despesas / Férias e Lazer', 'Lar e Recheio', 'Formação', 'Eficiência Energética'];
+    const order = ['Pagar Despesas / Férias e Lazer', 'Lar e Recheio', 'Formação', 'Eficiência Energética', 'Auto / Moto Novo', 'Auto / Moto Usado'];
     const finalidades = [...new Set(DATA.map(r => r.f))].sort((a, b) => order.indexOf(a) - order.indexOf(b));
     const dates = [...new Set(DATA.map(r => r.d))].sort();
     const latestDate = dates[dates.length - 1];
